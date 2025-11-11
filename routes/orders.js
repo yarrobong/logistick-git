@@ -45,6 +45,11 @@ router.post('/', async (req, res) => {
     return res.redirect('/orders/new');
   }
 
+  if (!orderDate) {
+    req.flash('error', 'Дата заказа обязательна.');
+    return res.redirect('/orders/new');
+  }
+
   try {
     let clientId = null;
 
@@ -116,13 +121,11 @@ router.get('/:id', async (req, res) => {
 // PUT /orders/:id - обновить заказ (используем POST с _method=PUT)
 router.post('/:id', async (req, res) => {
   const orderId = parseInt(req.params.id, 10);
-  // ДОБАВЬТЕ orderDate СЮДА
-  const { clientName, clientPhone, destinationCity, status, orderDate, // <-- orderDate добавлено
+  const { clientName, clientPhone, destinationCity, status, orderDate, // <-- orderDate есть
           shippingCostChinaMoscow, shippingCostMoscowDestination,
           intermediaryChinaMoscow, trackingNumberChinaMoscow,
           intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
 
-  // --- ДОБАВЬТЕ ЭТУ СТРОКУ ---
   console.log('DEBUG PUT /:id: req.body.orderDate =', orderDate, 'Type:', typeof orderDate);
 
   if (isNaN(orderId)) {
@@ -134,6 +137,11 @@ router.post('/:id', async (req, res) => {
   if (!clientName) {
     req.flash('error', 'Имя клиента обязательно.');
     return res.redirect(`/orders/${orderId}`);
+  }
+
+  if (!orderDate) {
+      req.flash('error', 'Дата заказа обязательна.');
+      return res.redirect(`/orders/${orderId}`);
   }
 
   try {
@@ -164,7 +172,7 @@ router.post('/:id', async (req, res) => {
     }
 
     // Используем два новых поля для стоимости доставки
-    await Order.update(orderId, clientId, destinationCity, status,
+    await Order.update(orderId, clientId, destinationCity, status, orderDate,
                        shippingCostChinaMoscow, shippingCostMoscowDestination, // Передаём два значения
                        intermediaryChinaMoscow, trackingNumberChinaMoscow,
                        intermediaryMoscowDestination, trackingNumberMoscowDestination);
