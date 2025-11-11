@@ -41,7 +41,12 @@
                                 <td><a href="/orders/<%= order.id %>" class="text-decoration-none"><%= order.id %></a></td>
                                 <td><%= order.order_date ? new Date(order.order_date).toLocaleDateString('ru-RU') : 'N/A' %></td>
                                 <td><%= order.destination_city || 'N/A' %></td>
-                                <td><%= order.status %></td>
+                                                                <td>
+                                    <% const statusConfig = STATUS_CONFIG.ORDER_STATUSES.find(s => s.value === order.status); %>
+                                    <span class="badge bg-<%= statusConfig ? statusConfig.color : 'secondary' %>">
+                                        <%= order.status %>
+                                    </span>
+                                </td>
                                 <td><%= (parseFloat(order.total_with_shipping) || 0).toFixed(2) %></td>
                                 <td>
                                     <a href="/orders/<%= order.id %>" class="btn btn-sm btn-outline-light">Детали</a>

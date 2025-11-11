@@ -5,6 +5,7 @@ const pgSession = require('connect-pg-simple')(session); // Импортируе
 const flash = require('connect-flash');
 const ejs = require('ejs');
 const path = require('path');
+const STATUS_CONFIG = require('./config/statuses'); // Импортируем конфиг статусов
 
 // Импорты маршрутов и middleware
 const authRoutes = require('./routes/auth');
@@ -74,6 +75,17 @@ app.get('/dashboard', authMiddleware, (req, res) => {
 // Обработка 404
 app.use((req, res) => {
   res.status(404).render('404');
+});
+
+// Установка переменной для проверки аутентификации в шаблонах и статусов
+app.use((req, res, next) => {
+  res.locals.messages = {
+    error: req.flash('error'),
+    success: req.flash('success')
+  };
+  res.locals.isAuthenticated = req.session.isLoggedIn;
+  res.locals.STATUS_CONFIG = STATUS_CONFIG; // Делаем статусы доступными в шаблонах
+  next();
 });
 
 app.listen(PORT, () => {

@@ -36,7 +36,12 @@
                                 <td><%= order.order_date ? new Date(order.order_date).toLocaleDateString('ru-RU') : 'N/A' %></td>
                                 <td><%= order.client_name || 'N/A' %></td>
                                 <td><%= order.destination_city || 'N/A' %></td>
-                                <td><%= order.status %></td>
+                                                            <td>
+                                <% const statusConfig = STATUS_CONFIG.ORDER_STATUSES.find(s => s.value === order.status); %>
+                                <span class="badge bg-<%= statusConfig ? statusConfig.color : 'secondary' %>">
+                                    <%= order.status %>
+                                </span>
+                            </td>
                              <td><%= order.total_with_shipping ? (parseFloat(order.total_with_shipping) || 0).toFixed(2) : '0.00' %></td>                             <td>
                                     <a href="/orders/<%= order.id %>" class="btn btn-sm btn-outline-light me-1">Просмотр</a>
                                     <form action="/orders/<%= order.id %>/archive" method="POST" class="d-inline">
