@@ -4,14 +4,13 @@ const session = require('express-session');
 const flash = require('connect-flash');
 const path = require('path');
 
-// Обязательно убедитесь, что файлы routes и middleware существуют и экспортируют правильные значения
-const authRoutes = require('./routes/auth'); // Раскомментировано
-const orderRoutes = require('./routes/orders'); // Раскомментировано
-const clientRoutes = require('./routes/clients'); // Раскомментировано
-const authMiddleware = require('./middleware/auth'); // Раскомментировано
+const authRoutes = require('./routes/auth');
+const orderRoutes = require('./routes/orders');
+const clientRoutes = require('./routes/clients'); // Пока не подключаем, но файл создадим позже
+const authMiddleware = require('./middleware/auth');
 
 const app = express();
-const PORT = process.env.PORT || 3040; // Обновил порт до 3040
+const PORT = process.env.PORT || 3000;
 
 // Настройка EJS как шаблонизатора
 app.set('view engine', 'ejs');
@@ -34,25 +33,34 @@ app.use(flash());
 
 // Установка переменной для проверки аутентификации в шаблонах
 app.use((req, res, next) => {
+  res.locals.messages = {
+    error: req.flash('error'),
+    success: req.flash('success')
+  };
   res.locals.isAuthenticated = req.session.isLoggedIn;
   next();
 });
 
-// Маршруты - РАСКОММЕНТИРОВАНЫ
-app.use('/', authRoutes); // <-- Раскомментировано
-app.use('/orders', authMiddleware, orderRoutes); // <-- Раскомментировано
-app.use('/clients', authMiddleware, clientRoutes); // <-- Раскомментировано
+// Маршруты
+app.use('/', authRoutes);
+app.use('/orders', authMiddleware, orderRoutes);
+// app.use('/clients', authMiddleware, clientRoutes); // Пока закомментировано
 
-// Главная страница (после авторизации)
-app.get('/dashboard', authMiddleware, (req, res) => {
-  res.render('dashboard');
+// Корневой маршрут - перенаправляем на /orders после аутентификации
+app.get('/', authMiddleware, (req, res) => {
+  res.redirect('/orders');
 });
 
-// Обработка 404 - РАСКОММЕНТИРОВАНО
+// Старая страница дашборда - тоже перенаправляем
+app.get('/dashboard', authMiddleware, (req, res) => {
+  res.redirect('/orders');
+});
+
+// Обработка 404
 app.use((req, res) => {
   res.status(404).render('404');
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`); // Обновил лог
+  console.log(`Server is running on http://localhost:${PORT}`);
 });

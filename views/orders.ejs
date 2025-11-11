@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список Заказов</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-dark text-light">
+    <%- include('partials/navbar') %>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Список Заказов</h1>
+            <a href="/orders/new" class="btn btn-primary">Создать Заказ</a>
+        </div>
+
+        <% if (typeof orders !== 'undefined' && orders.length > 0) { %>
+            <div class="table-responsive">
+                <table class="table table-dark table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Дата</th>
+                            <th>Клиент</th>
+                            <th>Город</th>
+                            <th>Статус</th>
+                            <th>Сумма (с доставкой)</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% orders.forEach(order => { %>
+                            <tr>
+                                <td><a href="/orders/<%= order.id %>" class="text-decoration-none"><%= order.id %></a></td>
+                                <td><%= order.order_date ? new Date(order.order_date).toLocaleDateString('ru-RU') : 'N/A' %></td>
+                                <td><%= order.client_name || 'N/A' %></td>
+                                <td><%= order.destination_city || 'N/A' %></td>
+                                <td><%= order.status %></td>
+                                <td><%= order.total_with_shipping ? order.total_with_shipping.toFixed(2) : '0.00' %></td>
+                                <td>
+                                    <a href="/orders/<%= order.id %>" class="btn btn-sm btn-outline-light me-1">Просмотр</a>
+                                    <form action="/orders/<%= order.id %>/archive" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-warning me-1" onclick="return confirm('Вы уверены, что хотите архивировать этот заказ?')">Архив</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <p class="text-center">Заказов пока нет.</p>
+        <% } %>
+
+        <!-- Flash сообщения -->
+        <% if (messages.error.length > 0) { %>
+            <% messages.error.forEach(msg => { %>
+                <div class="alert alert-danger"><%= msg %></div>
+            <% }); %>
+        <% } %>
+        <% if (messages.success.length > 0) { %>
+            <% messages.success.forEach(msg => { %>
+                <div class="alert alert-success"><%= msg %></div>
+            <% }); %>
+        <% } %>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/main.js"></script>
+</body>
+</html>

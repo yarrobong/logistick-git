@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= order ? `Заказ #${order.id}` : 'Новый Заказ' %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-dark text-light">
+    <%- include('partials/navbar') %>
+    <div class="container mt-4">
+        <h1><%= order ? `Заказ #${order.id}` : 'Новый Заказ' %></h1>
+
+        <form id="orderForm" action="<%= order ? `/orders/${order.id}` : '/orders' %>" method="POST">
+            <% if(order) { %>
+                <input type="hidden" name="_method" value="PUT">
+            <% } %>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="clientId" class="form-label">Клиент</label>
+                        <select class="form-select" id="clientId" name="clientId" required>
+                            <option value="">Выберите клиента</option>
+                            <% clients.forEach(client => { %>
+                                <option value="<%= client.id %>" <%= (order && order.client_id == client.id) ? 'selected' : '' %>><%= client.name %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="destinationCity" class="form-label">Город получателя</label>
+                        <input type="text" class="form-control" id="destinationCity" name="destinationCity" value="<%= order ? order.destination_city : '' %>">
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Статус</label>
+                        <input type="text" class="form-control" id="status" name="status" value="<%= order ? order.status : 'Создан' %>">
+                    </div>
+                    <div class="mb-3">
+                        <label for="orderDate" class="form-label">Дата заказа</label>
+                        <input type="date" class="form-control" id="orderDate" name="orderDate" value="<%= order ? order.order_date : new Date().toISOString().split('T')[0] %>">
+                    </div>
+                    <div class="mb-3">
+                        <label for="shippingCost" class="form-label">Стоимость доставки</label>
+                        <input type="number" class="form-control" id="shippingCost" name="shippingCost" step="0.01" value="<%= order ? order.shipping_cost : '0.00' %>">
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary"><%= order ? 'Обновить Заказ' : 'Создать Заказ' %></button>
+            <% if (order) { %>
+                <a href="/orders" class="btn btn-secondary">Назад к списку</a>
+            <% } %>
+        </form>
+
+        <!-- Секция для товаров -->
+        <% if (order) { %>
+            <hr class="my-4">
+            <h2>Товары в заказе</h2>
+
+            <form id="addItemForm" action="/orders/<%= order.id %>/items" method="POST">
+                <div class="row">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control mb-2" name="productName" placeholder="Наименование товара" required>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" class="form-control mb-2" name="quantity" placeholder="Количество" min="1" value="1" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" class="form-control mb-2" name="price" step="0.01" placeholder="Цена за ед." min="0" required>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-success w-100">Добавить Товар</button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="table-responsive mt-3">
+                <table class="table table-dark table-striped">
+                    <thead>
+                        <tr>
+                            <th>Наименование</th>
+                            <th>Кол-во</th>
+                            <th>Цена за ед.</th>
+                            <th>Сумма</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTableBody">
+                        <% if (order.items && order.items.length > 0) { %>
+                            <% order.items.forEach(item => { %>
+                                <tr data-item-id="<%= item.id %>">
+                                    <td class="item-name"><%= item.product_name %></td>
+                                    <td class="item-quantity"><%= item.quantity %></td>
+                                    <td class="item-price"><%= item.price.toFixed(2) %></td>
+                                    <td class="item-total"><%= item.item_total.toFixed(2) %></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-info me-1 edit-item-btn" data-bs-toggle="modal" data-bs-target="#editItemModal" data-item-id="<%= item.id %>">Ред.</button>
+                                        <button class="btn btn-sm btn-outline-danger delete-item-btn" data-item-id="<%= item.id %>">Удл.</button>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr><td colspan="5" class="text-center">Товаров в заказе пока нет.</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-end">
+                <h4>Итого: <span id="totalAmountDisplay"><%= (order.total_amount || 0).toFixed(2) %></span> + Доставка: <span id="shippingCostDisplay"><%= (order.shipping_cost || 0).toFixed(2) %></span> = <span id="grandTotalDisplay"><%= ((order.total_amount || 0) + (order.shipping_cost || 0)).toFixed(2) %></span></h4>
+            </div>
+
+            <div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content bg-secondary text-white">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editItemModalLabel">Редактировать Товар</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editItemForm" method="POST">
+                                <input type="hidden" id="editItemId" name="itemId">
+                                <input type="hidden" name="_method" value="PUT">
+                                <div class="mb-3">
+                                    <label for="editProductName" class="form-label">Наименование</label>
+                                    <input type="text" class="form-control" id="editProductName" name="productName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editQuantity" class="form-label">Количество</label>
+                                    <input type="number" class="form-control" id="editQuantity" name="quantity" min="1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editPrice" class="form-label">Цена за ед.</label>
+                                    <input type="number" class="form-control" id="editPrice" name="price" step="0.01" min="0" required>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                            <button type="button" class="btn btn-primary" id="saveItemChangesBtn">Сохранить</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <% } %>
+
+        <!-- Flash сообщения -->
+        <% if (messages.error.length > 0) { %>
+            <% messages.error.forEach(msg => { %>
+                <div class="alert alert-danger"><%= msg %></div>
+            <% }); %>
+        <% } %>
+        <% if (messages.success.length > 0) { %>
+            <% messages.success.forEach(msg => { %>
+                <div class="alert alert-success"><%= msg %></div>
+            <% }); %>
+        <% } %>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const editModal = document.getElementById('editItemModal');
+            const editForm = document.getElementById('editItemForm');
+            const saveBtn = document.getElementById('saveItemChangesBtn');
+            const itemsTableBody = document.getElementById('itemsTableBody');
+
+            editModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const itemId = button.getAttribute('data-item-id');
+                const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+                if (!row) return;
+
+                const name = row.querySelector('.item-name').textContent;
+                const quantity = row.querySelector('.item-quantity').textContent;
+                const price = row.querySelector('.item-price').textContent;
+
+                document.getElementById('editItemId').value = itemId;
+                document.getElementById('editProductName').value = name;
+                document.getElementById('editQuantity').value = parseInt(quantity);
+                document.getElementById('editPrice').value = parseFloat(price);
+
+                editForm.action = `/orders/${<%= order.id %>}/items/${itemId}`;
+            });
+
+            saveBtn.addEventListener('click', function () {
+                editForm.submit();
+            });
+
+            itemsTableBody.addEventListener('click', function(e) {
+                if (e.target.classList.contains('delete-item-btn')) {
+                    const itemId = e.target.getAttribute('data-item-id');
+                    if (confirm('Вы уверены, что хотите удалить этот товар?')) {
+                        fetch(`/orders/${<%= order.id %>}/items/${itemId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+                                if (row) row.remove();
+                                location.reload();
+                            } else {
+                                alert('Ошибка при удалении товара.');
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Error:', err);
+                            alert('Ошибка при удалении товара.');
+                        });
+                    }
+                }
+            });
+
+            document.getElementById('shippingCost').addEventListener('input', function() {
+                const totalAmount = <%= (order ? order.total_amount : 0) || 0 %>;
+                const shippingCost = parseFloat(this.value) || 0;
+                const grandTotal = totalAmount + shippingCost;
+
+                document.getElementById('shippingCostDisplay').textContent = shippingCost.toFixed(2);
+                document.getElementById('grandTotalDisplay').textContent = grandTotal.toFixed(2);
+            });
+
+        });
+    </script>
+</body>
+</html>
