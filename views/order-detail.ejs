@@ -56,8 +56,9 @@
                     </div>
                     <div class="mb-3">
                         <label for="orderDate" class="form-label">Дата заказа</label>
-                        <input type="date" class="form-control" id="orderDate" name="orderDate" value="<%= order ? order.order_date : new Date().toISOString().split('T')[0] %>" required>
-                    </div>
+                        <input type="date" class="form-control" id="orderDate" name="orderDate"
+       value="<%= order ? (order.order_date instanceof Date ? order.order_date.toISOString().split('T')[0] : order.order_date) : new Date().toISOString().split('T')[0] %>">
+    </div>
                     <div class="mb-3">
                         <label for="shippingCostChinaMoscow" class="form-label">Доставка Китай-Москва</label>
                         <input type="number" class="form-control" id="shippingCostChinaMoscow" name="shippingCostChinaMoscow" step="0.01" value="<%= order ? order.shipping_cost_china_moscow : '0.00' %>">
