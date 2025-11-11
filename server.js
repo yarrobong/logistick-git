@@ -13,7 +13,7 @@ const clientRoutes = require('./routes/clients');
 const authMiddleware = require('./middleware/auth');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3040;
 
 // --- НАСТРОЙКА БАЗЫ ДАННЫХ ДЛЯ СЕССИЙ ---
 // Создаем пул подключений для сессий, используя те же параметры, что и в config/database.js
