@@ -59,8 +59,12 @@
                         <input type="date" class="form-control" id="orderDate" name="orderDate" value="<%= order ? order.order_date : new Date().toISOString().split('T')[0] %>" required>
                     </div>
                     <div class="mb-3">
-                        <label for="shippingCost" class="form-label">Стоимость доставки (общая)</label>
-                        <input type="number" class="form-control" id="shippingCost" name="shippingCost" step="0.01" value="<%= order ? order.shipping_cost : '0.00' %>">
+                        <label for="shippingCostChinaMoscow" class="form-label">Доставка Китай-Москва</label>
+                        <input type="number" class="form-control" id="shippingCostChinaMoscow" name="shippingCostChinaMoscow" step="0.01" value="<%= order ? order.shipping_cost_china_moscow : '0.00' %>">
+                    </div>
+                    <div class="mb-3">
+                        <label for="shippingCostMoscowDestination" class="form-label">Доставка Москва-Город клиента</label>
+                        <input type="number" class="form-control" id="shippingCostMoscowDestination" name="shippingCostMoscowDestination" step="0.01" value="<%= order ? order.shipping_cost_moscow_destination : '0.00' %>">
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -284,13 +288,22 @@
                     }
                 });
 
-                    document.getElementById('shippingCost').addEventListener('input', function() {
-                    const totalAmount = parseFloat(<%= (order.total_amount || 0) %>) || 0; // Обернули в parseFloat
-                    const shippingCost = parseFloat(this.value) || 0;
-                    const grandTotal = totalAmount + shippingCost;
+                                    // Обновление общей суммы при изменении стоимости доставки Китай-Москва
+                document.getElementById('shippingCostChinaMoscow').addEventListener('input', updateGrandTotalDisplay);
+                // Обновление общей суммы при изменении стоимости доставки Москва-Город
+                document.getElementById('shippingCostMoscowDestination').addEventListener('input', updateGrandTotalDisplay);
 
-                    document.getElementById('shippingCostDisplay').textContent = shippingCost.toFixed(2);
+                // Функция для пересчёта и отображения общей суммы
+                function updateGrandTotalDisplay() {
+                    const totalAmount = parseFloat(<%= (order.total_amount || 0) %>) || 0;
+                    const shippingCostChinaMoscow = parseFloat(document.getElementById('shippingCostChinaMoscow').value) || 0;
+                    const shippingCostMoscowDestination = parseFloat(document.getElementById('shippingCostMoscowDestination').value) || 0;
+                    const totalShipping = shippingCostChinaMoscow + shippingCostMoscowDestination;
+                    const grandTotal = totalAmount + totalShipping;
+
+                    document.getElementById('shippingCostDisplay').textContent = totalShipping.toFixed(2);
                     document.getElementById('grandTotalDisplay').textContent = grandTotal.toFixed(2);
+                }
                 });
             <% } %>
         });

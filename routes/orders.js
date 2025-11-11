@@ -31,7 +31,8 @@ router.get('/new', async (req, res) => {
 // POST /orders - создать новый заказ
 router.post('/', async (req, res) => {
   // console.log(req.body); // Для отладки
-  const { clientName, clientPhone, destinationCity, status, orderDate, shippingCost,
+  const { clientName, clientPhone, destinationCity, status, orderDate,
+          shippingCostChinaMoscow, shippingCostMoscowDestination, // Обновленные поля
           intermediaryChinaMoscow, trackingNumberChinaMoscow,
           intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
 
@@ -56,7 +57,7 @@ router.post('/', async (req, res) => {
         }
     } else {
         // Если clientId не передан, ищем существующего клиента по имени и телефону
-        let client = await Client.findByPhoneAndName(clientPhone, clientName); // Нужно добавить этот метод в модель
+        let client = await Client.findByPhoneAndName(clientPhone, clientName);
 
         if (!client) {
             // Если не найден, создаем нового
@@ -68,7 +69,9 @@ router.post('/', async (req, res) => {
         }
     }
 
-    const orderId = await Order.create(clientId, destinationCity, status, orderDate, shippingCost,
+    // Используем два новых поля для стоимости доставки
+    const orderId = await Order.create(clientId, destinationCity, status, orderDate,
+                                      shippingCostChinaMoscow, shippingCostMoscowDestination, // Передаём два значения
                                       intermediaryChinaMoscow, trackingNumberChinaMoscow,
                                       intermediaryMoscowDestination, trackingNumberMoscowDestination);
     req.flash('success', 'Заказ успешно создан.');
@@ -107,7 +110,8 @@ router.get('/:id', async (req, res) => {
 // PUT /orders/:id - обновить заказ (используем POST с _method=PUT)
 router.post('/:id', async (req, res) => {
   const orderId = parseInt(req.params.id, 10);
-  const { clientName, clientPhone, destinationCity, status, shippingCost,
+  const { clientName, clientPhone, destinationCity, status,
+          shippingCostChinaMoscow, shippingCostMoscowDestination, // Обновленные поля
           intermediaryChinaMoscow, trackingNumberChinaMoscow,
           intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
 
@@ -137,7 +141,7 @@ router.post('/:id', async (req, res) => {
         }
     } else {
         // Если clientId не передан, ищем существующего клиента по имени и телефону
-        let client = await Client.findByPhoneAndName(clientPhone, clientName); // Нужно добавить этот метод в модель
+        let client = await Client.findByPhoneAndName(clientPhone, clientName);
 
         if (!client) {
             // Если не найден, создаем нового
@@ -149,7 +153,9 @@ router.post('/:id', async (req, res) => {
         }
     }
 
-    await Order.update(orderId, clientId, destinationCity, status, shippingCost,
+    // Используем два новых поля для стоимости доставки
+    await Order.update(orderId, clientId, destinationCity, status,
+                       shippingCostChinaMoscow, shippingCostMoscowDestination, // Передаём два значения
                        intermediaryChinaMoscow, trackingNumberChinaMoscow,
                        intermediaryMoscowDestination, trackingNumberMoscowDestination);
     req.flash('success', 'Заказ успешно обновлен.');

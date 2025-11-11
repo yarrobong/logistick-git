@@ -2,12 +2,12 @@
 const db = require('../config/database');
 
 const Order = {
-  // Получить все заказы с информацией о клиенте
+    // Получить все заказы с информацией о клиенте
   findAll: async () => {
-    // Запрос включает общую сумму заказа и имя клиента
+    // Запрос включает общую сумму заказа и имя клиента, и общую стоимость доставки
     const result = await db.query(`
         SELECT o.id, o.client_id, c.name as client_name, o.destination_city, o.status, o.order_date,
-               (o.total_amount + o.shipping_cost) AS total_with_shipping
+               (o.total_amount + o.shipping_cost_china_moscow + o.shipping_cost_moscow_destination) AS total_with_shipping
         FROM orders o
         LEFT JOIN clients c ON o.client_id = c.id
         ORDER BY o.order_date DESC
@@ -35,27 +35,31 @@ const Order = {
   },
 
   // Создать новый заказ
-  create: async (clientId, destinationCity, status, orderDate, shippingCost, intermediaryChinaMoscow, trackingNumberChinaMoscow, intermediaryMoscowDestination, trackingNumberMoscowDestination) => {
+  create: async (clientId, destinationCity, status, orderDate, shippingCostChinaMoscow, shippingCostMoscowDestination, intermediaryChinaMoscow, trackingNumberChinaMoscow, intermediaryMoscowDestination, trackingNumberMoscowDestination) => {
     const result = await db.query(
-      `INSERT INTO orders (client_id, destination_city, status, order_date, shipping_cost,
+      `INSERT INTO orders (client_id, destination_city, status, order_date,
+                           shipping_cost_china_moscow, shipping_cost_moscow_destination, -- Вставляем два новых поля
                            intermediary_china_moscow, tracking_number_china_moscow,
                            intermediary_moscow_destination, tracking_number_moscow_destination)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
-      [clientId, destinationCity, status, orderDate, shippingCost || 0,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
+      [clientId, destinationCity, status, orderDate,
+       shippingCostChinaMoscow || 0, shippingCostMoscowDestination || 0, // Передаём два значения
        intermediaryChinaMoscow, trackingNumberChinaMoscow,
        intermediaryMoscowDestination, trackingNumberMoscowDestination]
     );
     return result.rows[0].id; // Возвращаем ID созданного заказа
   },
 
-  // Обновить заказ
-  update: async (id, clientId, destinationCity, status, shippingCost, intermediaryChinaMoscow, trackingNumberChinaMoscow, intermediaryMoscowDestination, trackingNumberMoscowDestination) => {
+    // Обновить заказ
+  update: async (id, clientId, destinationCity, status, shippingCostChinaMoscow, shippingCostMoscowDestination, intermediaryChinaMoscow, trackingNumberChinaMoscow, intermediaryMoscowDestination, trackingNumberMoscowDestination) => {
     await db.query(
-      `UPDATE orders SET client_id = $1, destination_city = $2, status = $3, shipping_cost = $4,
-                           intermediary_china_moscow = $5, tracking_number_china_moscow = $6,
-                           intermediary_moscow_destination = $7, tracking_number_moscow_destination = $8
-       WHERE id = $9`,
-      [clientId, destinationCity, status, shippingCost || 0,
+      `UPDATE orders SET client_id = $1, destination_city = $2, status = $3,
+                           shipping_cost_china_moscow = $4, shipping_cost_moscow_destination = $5, -- Обновляем два новых поля
+                           intermediary_china_moscow = $6, tracking_number_china_moscow = $7,
+                           intermediary_moscow_destination = $8, tracking_number_moscow_destination = $9
+       WHERE id = $10`,
+      [clientId, destinationCity, status,
+       shippingCostChinaMoscow || 0, shippingCostMoscowDestination || 0, // Передаём два значения
        intermediaryChinaMoscow, trackingNumberChinaMoscow,
        intermediaryMoscowDestination, trackingNumberMoscowDestination, id]
     );
