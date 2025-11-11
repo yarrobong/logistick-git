@@ -18,31 +18,28 @@
             <% } %>
             <div class="row">
                 <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="clientId" class="form-label">Клиент</label>
-                        <select class="form-select" id="clientId" name="clientId" <%= order ? 'required' : '' %>>
-                            <option value="">Выберите клиента</option>
-                            <!-- Отображаем только если редактируем -->
-                            <% if (order) { %>
-                                <% clients.forEach(client => { %>
-                                    <option value="<%= client.id %>" <%= (order.client_id == client.id) ? 'selected' : '' %>><%= client.name %></option>
-                                <% }); %>
-                            <% } %>
-                        </select>
-                        <!-- Поля для нового клиента (только при создании) -->
-                        <% if (!order) { %>
-                            <div id="newClientFields" style="display: none;">
-                                <div class="mb-3">
-                                    <label for="newClientName" class="form-label">Имя нового клиента</label>
-                                    <input type="text" class="form-control" id="newClientName" name="newClientName" placeholder="Введите имя">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="newClientPhone" class="form-label">Телефон нового клиента</label>
-                                    <input type="text" class="form-control" id="newClientPhone" name="newClientPhone" placeholder="Введите телефон">
-                                </div>
-                            </div>
+                                        <div class="mb-3">
+                        <label for="clientName" class="form-label">Имя клиента</label>
+                        <!-- Отображаем имя клиента при редактировании -->
+                        <% if (order && order.client_name) { %>
+                            <input type="text" class="form-control" id="clientName" name="clientName" value="<%= order.client_name %>" required>
+                        <% } else { %>
+                            <input type="text" class="form-control" id="clientName" name="clientName" placeholder="Введите имя клиента" required>
                         <% } %>
                     </div>
+                    <div class="mb-3">
+                        <label for="clientPhone" class="form-label">Телефон клиента</label>
+                        <!-- Отображаем телефон клиента при редактировании -->
+                        <% if (order && order.client_phone) { %>
+                            <input type="text" class="form-control" id="clientPhone" name="clientPhone" value="<%= order.client_phone %>">
+                        <% } else { %>
+                            <input type="text" class="form-control" id="clientPhone" name="clientPhone" placeholder="Введите телефон клиента">
+                        <% } %>
+                    </div>
+                    <!-- Скрытое поле для ID клиента (если редактируем заказ, чтобы не терять привязку) -->
+                    <% if (order && order.client_id) { %>
+                        <input type="hidden" name="clientId" value="<%= order.client_id %>">
+                    <% } %>
                     <div class="mb-3">
                         <label for="destinationCity" class="form-label">Город получателя</label>
                         <input type="text" class="form-control" id="destinationCity" name="destinationCity" value="<%= order ? order.destination_city : '' %>" required>

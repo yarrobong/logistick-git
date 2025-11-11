@@ -31,23 +31,42 @@ router.get('/new', async (req, res) => {
 // POST /orders - создать новый заказ
 router.post('/', async (req, res) => {
   // console.log(req.body); // Для отладки
-  let { clientId, destinationCity, status, orderDate, shippingCost,
-        intermediaryChinaMoscow, trackingNumberChinaMoscow,
-        intermediaryMoscowDestination, trackingNumberMoscowDestination,
-        newClientName, newClientPhone } = req.body; // Получаем данные нового клиента
+  const { clientName, clientPhone, destinationCity, status, orderDate, shippingCost,
+          intermediaryChinaMoscow, trackingNumberChinaMoscow,
+          intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
+
+  // Проверяем, что имя клиента введено
+  if (!clientName) {
+    req.flash('error', 'Имя клиента обязательно.');
+    return res.redirect('/orders/new');
+  }
 
   try {
-    // Если выбрано "Выберите клиента" и введены данные нового клиента
-    if (!clientId && newClientName && newClientPhone) {
-        // Создаем нового клиента
-        const newClient = await Client.create(newClientName, newClientPhone, null); // address пока null
-        clientId = newClient.id; // Используем ID нового клиента
-    } else if (!clientId && (!newClientName || !newClientPhone)) {
-        // Если выбрано "Выберите клиента" но данные нового клиента не введены
-        req.flash('error', 'Пожалуйста, выберите клиента или введите данные нового клиента.');
-        return res.redirect('/orders/new');
+    let clientId = null;
+
+    // Если мы редактируем заказ (clientId передан скрытым полем), используем его
+    if (req.body.clientId) {
+        clientId = parseInt(req.body.clientId, 10);
+        // Обновим данные клиента, если они изменились
+        const existingClient = await Client.findById(clientId);
+        if (existingClient) {
+            if (existingClient.name !== clientName || existingClient.phone !== clientPhone) {
+                await Client.update(clientId, clientName, clientPhone, existingClient.address); // address оставляем как есть или можно добавить в форму
+            }
+        }
+    } else {
+        // Если clientId не передан, ищем существующего клиента по имени и телефону
+        let client = await Client.findByPhoneAndName(clientPhone, clientName); // Нужно добавить этот метод в модель
+
+        if (!client) {
+            // Если не найден, создаем нового
+            const newClient = await Client.create(clientName, clientPhone, null); // address пока null
+            clientId = newClient.id;
+        } else {
+            // Если найден, используем его ID
+            clientId = client.id;
+        }
     }
-    // Если clientId уже был выбран, используем его как есть
 
     const orderId = await Order.create(clientId, destinationCity, status, orderDate, shippingCost,
                                       intermediaryChinaMoscow, trackingNumberChinaMoscow,
@@ -88,7 +107,7 @@ router.get('/:id', async (req, res) => {
 // PUT /orders/:id - обновить заказ (используем POST с _method=PUT)
 router.post('/:id', async (req, res) => {
   const orderId = parseInt(req.params.id, 10);
-  const { clientId, destinationCity, status, shippingCost,
+  const { clientName, clientPhone, destinationCity, status, shippingCost,
           intermediaryChinaMoscow, trackingNumberChinaMoscow,
           intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
 
@@ -97,8 +116,39 @@ router.post('/:id', async (req, res) => {
     return res.redirect('/orders');
   }
 
+  // Проверяем, что имя клиента введено
+  if (!clientName) {
+    req.flash('error', 'Имя клиента обязательно.');
+    return res.redirect(`/orders/${orderId}`);
+  }
+
   try {
-    // При редактировании можно только выбрать существующего клиента
+    let clientId = null;
+
+    // Если clientId передан скрытым полем (редактирование), используем его
+    if (req.body.clientId) {
+        clientId = parseInt(req.body.clientId, 10);
+        // Обновим данные клиента, если они изменились
+        const existingClient = await Client.findById(clientId);
+        if (existingClient) {
+            if (existingClient.name !== clientName || existingClient.phone !== clientPhone) {
+                await Client.update(clientId, clientName, clientPhone, existingClient.address); // address оставляем как есть или можно добавить в форму
+            }
+        }
+    } else {
+        // Если clientId не передан, ищем существующего клиента по имени и телефону
+        let client = await Client.findByPhoneAndName(clientPhone, clientName); // Нужно добавить этот метод в модель
+
+        if (!client) {
+            // Если не найден, создаем нового
+            const newClient = await Client.create(clientName, clientPhone, null); // address пока null
+            clientId = newClient.id;
+        } else {
+            // Если найден, используем его ID
+            clientId = client.id;
+        }
+    }
+
     await Order.update(orderId, clientId, destinationCity, status, shippingCost,
                        intermediaryChinaMoscow, trackingNumberChinaMoscow,
                        intermediaryMoscowDestination, trackingNumberMoscowDestination);
