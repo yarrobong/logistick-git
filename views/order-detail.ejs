@@ -167,13 +167,11 @@
         const saveBtn = document.getElementById('saveItemChangesBtn');
         const itemsTableBody = document.getElementById('itemsTableBody');
 
-        // Проверяем, существует ли переменная 'order' (т.е. мы не на странице создания)
-        // Это значение передается из EJS в JavaScript как строка "null" или число.
-        // В EJS <%= typeof order !== 'undefined' && order ? order.id : 'null' %>
-        // Если order.id был передан, то это число. Если нет, то строка 'null'.
-        const orderId = <%= order ? order.id : 'null' %>;
+        // Проверяем, существовала ли переменная 'order' при рендеринге (т.е. мы на странице редактирования)
+        // Если order был передан (не null), то EJS сгенерирует число, иначе ничего не будет сгенерировано для этого блока
+        <% if (order) { %>
+            const orderId = <%= order.id %>; // orderId теперь всегда число, если блок исполняется
 
-        if (orderId !== null) { // Только если мы на странице редактирования
             editModal.addEventListener('show.bs.modal', function (event) {
                 const button = event.relatedTarget;
                 const itemId = button.getAttribute('data-item-id');
@@ -189,7 +187,7 @@
                 document.getElementById('editQuantity').value = parseInt(quantity);
                 document.getElementById('editPrice').value = parseFloat(price);
 
-                // Используем переменную orderId вместо <%= order.id %>
+                // Используем переменную orderId
                 editForm.action = `/orders/${orderId}/items/${itemId}`;
             });
 
@@ -201,7 +199,7 @@
                 if (e.target.classList.contains('delete-item-btn')) {
                     const itemId = e.target.getAttribute('data-item-id');
                     if (confirm('Вы уверены, что хотите удалить этот товар?')) {
-                        // Используем переменную orderId вместо <%= order.id %>
+                        // Используем переменную orderId
                         fetch(`/orders/${orderId}/items/${itemId}`, {
                             method: 'DELETE',
                             headers: {
@@ -227,20 +225,15 @@
 
             document.getElementById('shippingCost').addEventListener('input', function() {
                 // Используем значение из EJS для начальной суммы
-                const totalAmount = <%= (order ? order.total_amount : 0) || 0 %>;
+                const totalAmount = <%= (order.total_amount || 0) %>;
                 const shippingCost = parseFloat(this.value) || 0;
                 const grandTotal = totalAmount + shippingCost;
 
                 document.getElementById('shippingCostDisplay').textContent = shippingCost.toFixed(2);
                 document.getElementById('grandTotalDisplay').textContent = grandTotal.toFixed(2);
             });
-        } else {
-            // Если на странице создания заказа, скрываем секцию товаров
-            const itemSection = document.querySelector('#addItemForm');
-            if (itemSection) {
-                itemSection.closest('hr').nextElementSibling.style.display = 'none'; // Скрыть все после <hr>
-            }
-        }
+        <% } %>
+        // Закрывающая скобка для if (order) не нужна, просто завершаем блок EJS
     });
 </script>
 </body>
