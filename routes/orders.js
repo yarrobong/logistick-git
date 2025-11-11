@@ -99,6 +99,10 @@ router.get('/:id', async (req, res) => {
       return res.redirect('/orders');
     }
     const clients = await Client.findAll(); // Получаем список клиентов для выпадающего списка при редактировании
+
+console.log('DEBUG: order.order_date =', order.order_date, 'Type:', typeof order.order_date, 'Value:', order.order_date);
+
+
     res.render('order-detail', { order, clients, isEditing: true });
   } catch (err) {
     console.error(err);
