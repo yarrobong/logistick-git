@@ -199,23 +199,28 @@
         document.addEventListener('DOMContentLoaded', function () {
             // Логика для показа/скрытия полей нового клиента (только при создании заказа)
             const clientIdSelect = document.getElementById('clientId');
-            const newClientFields = document.getElementById('newClientFields');
+    const newClientFields = document.getElementById('newClientFields');
 
-            if (clientIdSelect && newClientFields) {
-                clientIdSelect.addEventListener('change', function() {
-                    if (this.value === '') {
-                        newClientFields.style.display = 'block';
-                        // Сделаем поля нового клиента обязательными, если выбрано "Выберите клиента"
-                        document.getElementById('newClientName').required = true;
-                        document.getElementById('newClientPhone').required = true;
-                    } else {
-                        newClientFields.style.display = 'none';
-                        // Уберем обязательность, если выбран существующий клиент
-                        document.getElementById('newClientName').required = false;
-                        document.getElementById('newClientPhone').required = false;
-                    }
-                });
+    if (clientIdSelect && newClientFields) {
+        // Проверяем начальное состояние при загрузке страницы
+        if (clientIdSelect.value === '') {
+            newClientFields.style.display = 'block';
+            document.getElementById('newClientName').required = true;
+            document.getElementById('newClientPhone').required = true;
+        }
+
+        clientIdSelect.addEventListener('change', function() {
+            if (this.value === '') {
+                newClientFields.style.display = 'block';
+                document.getElementById('newClientName').required = true;
+                document.getElementById('newClientPhone').required = true;
+            } else {
+                newClientFields.style.display = 'none';
+                document.getElementById('newClientName').required = false;
+                document.getElementById('newClientPhone').required = false;
             }
+        });
+    }
 
 
             const editModal = document.getElementById('editItemModal');
