@@ -57,6 +57,17 @@ app.use((req, res, next) => {
   next();
 });
 
+// Установка переменной для проверки аутентификации в шаблонах и статусов
+app.use((req, res, next) => {
+  res.locals.messages = {
+    error: req.flash('error'),
+    success: req.flash('success')
+  };
+  res.locals.isAuthenticated = req.session.isLoggedIn;
+  res.locals.STATUS_CONFIG = STATUS_CONFIG; // Делаем статусы доступными в шаблонах
+  next();
+});
+
 // Маршруты
 app.use('/', authRoutes);
 app.use('/orders', authMiddleware, orderRoutes);
@@ -77,16 +88,7 @@ app.use((req, res) => {
   res.status(404).render('404');
 });
 
-// Установка переменной для проверки аутентификации в шаблонах и статусов
-app.use((req, res, next) => {
-  res.locals.messages = {
-    error: req.flash('error'),
-    success: req.flash('success')
-  };
-  res.locals.isAuthenticated = req.session.isLoggedIn;
-  res.locals.STATUS_CONFIG = STATUS_CONFIG; // Делаем статусы доступными в шаблонах
-  next();
-});
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
