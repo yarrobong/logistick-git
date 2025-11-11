@@ -3,6 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session); // Импортируем и вызываем
 const flash = require('connect-flash');
+const ejs = require('ejs');
 const path = require('path');
 
 // Импорты маршрутов и middleware
