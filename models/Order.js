@@ -51,17 +51,20 @@ const Order = {
   },
 
     // Обновить заказ
-  update: async (id, clientId, destinationCity, status, shippingCostChinaMoscow, shippingCostMoscowDestination, intermediaryChinaMoscow, trackingNumberChinaMoscow, intermediaryMoscowDestination, trackingNumberMoscowDestination) => {
+  update: async (id, clientId, destinationCity, status, orderDate, // <-- Параметры: 1, 2, 3, 4
+                 shippingCostChinaMoscow, shippingCostMoscowDestination, // 5, 6
+                 intermediaryChinaMoscow, trackingNumberChinaMoscow, // 7, 8
+                 intermediaryMoscowDestination, trackingNumberMoscowDestination) => {
     await db.query(
-      `UPDATE orders SET client_id = $1, destination_city = $2, status = $3,
-                           shipping_cost_china_moscow = $4, shipping_cost_moscow_destination = $5, -- Обновляем два новых поля
-                           intermediary_china_moscow = $6, tracking_number_china_moscow = $7,
-                           intermediary_moscow_destination = $8, tracking_number_moscow_destination = $9
-       WHERE id = $10`,
-      [clientId, destinationCity, status,
-       shippingCostChinaMoscow || 0, shippingCostMoscowDestination || 0, // Передаём два значения
-       intermediaryChinaMoscow, trackingNumberChinaMoscow,
-       intermediaryMoscowDestination, trackingNumberMoscowDestination, id]
+      `UPDATE orders SET client_id = $1, destination_city = $2, status = $3, order_date = $4, -- <-- $4 должно быть датой, OK
+                           shipping_cost_china_moscow = $5, shipping_cost_moscow_destination = $6, -- $5, $6 - числа, OK
+                           intermediary_china_moscow = $7, tracking_number_china_moscow = $8, -- $7, $8 - строки, OK
+                           intermediary_moscow_destination = $9, tracking_number_moscow_destination = $10 -- $9, $10 - строки, OK
+       WHERE id = $11`, // <-- $11 - id заказа
+      [clientId, destinationCity, status, orderDate, // 1, 2, 3, 4
+       shippingCostChinaMoscow || 0, shippingCostMoscowDestination || 0, // 5, 6
+       intermediaryChinaMoscow, trackingNumberChinaMoscow, // 7, 8
+       intermediaryMoscowDestination, trackingNumberMoscowDestination, id] // 9, 10, 11
     );
   },
 
