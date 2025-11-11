@@ -4,7 +4,7 @@ const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session); // Импортируем и вызываем
 const flash = require('connect-flash');
 const path = require('path');
-const { Pool } = require('pg'); // Импортируем Pool из pg
+// const { Pool } = require('pg'); // Больше не нужно импортировать здесь напрямую
 
 // Импорты маршрутов и middleware
 const authRoutes = require('./routes/auth');
@@ -12,40 +12,29 @@ const orderRoutes = require('./routes/orders');
 const clientRoutes = require('./routes/clients');
 const authMiddleware = require('./middleware/auth');
 
+// Импортируем настройки подключения из config/database.js
+const db = require('./config/database');
+
 const app = express();
 const PORT = process.env.PORT || 3040;
 
-// --- НАСТРОЙКА БАЗЫ ДАННЫХ ДЛЯ СЕССИЙ ---
-// Создаем пул подключений для сессий, используя те же параметры, что и в config/database.js
-const pgPool = new Pool({
-  user: 'your_db_user', // Замените на ваши данные
-  host: 'your_db_host',
-  database: 'your_db_name',
-  password: 'your_db_password',
-  port: 5432,
-});
+// Настройка EJS как шаблонизатора
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
-// --- НАСТРОЙКА СЕССИИ ---
-app.use(session({
-  store: new pgSession({
-    pool: pgPool, // Используем созданный пул
-    tableName: 'user_sessions' // Имя таблицы для хранения сессий
-  }),
-  secret: 'your_really_long_and_random_secret_key_here', // ВАЖНО: замените на надежный ключ!
-  resave: false, // Рекомендуется false
-  saveUninitialized: false, // Не сохраняем неинициализированные сессии
-  cookie: {
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней (в миллисекундах)
-    secure: false, // Установите в true, если используете HTTPS
-    httpOnly: true, // Рекомендуется для безопасности
-    // sameSite: 'lax', // Рекомендуется для CSRF
-  }
-}));
-
-// Остальные middleware
+// Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Настройка сессии
+app.use(session({
+  secret: 'your_secret_key_here', // Замените на случайный секретный ключ
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // Установите в true, если используете HTTPS
+}));
+
 app.use(flash());
 
 // Установка переменной для проверки аутентификации в шаблонах
@@ -63,12 +52,12 @@ app.use('/', authRoutes);
 app.use('/orders', authMiddleware, orderRoutes);
 // app.use('/clients', authMiddleware, clientRoutes); // Пока закомментировано
 
-// Корневой маршрут
+// Корневой маршрут - перенаправляем на /orders после аутентификации
 app.get('/', authMiddleware, (req, res) => {
   res.redirect('/orders');
 });
 
-// Старая страница дашборда
+// Старая страница дашборда - тоже перенаправляем
 app.get('/dashboard', authMiddleware, (req, res) => {
   res.redirect('/orders');
 });
