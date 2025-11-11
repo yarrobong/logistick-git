@@ -124,9 +124,9 @@
                             <% order.items.forEach(item => { %>
                                 <tr data-item-id="<%= item.id %>">
                                     <td class="item-name"><%= item.product_name %></td>
-                                    <td class="item-quantity"><%= item.quantity %></td>
-                                    <td class="item-price"><%= item.price.toFixed(2) %></td>
-                                    <td class="item-total"><%= item.item_total.toFixed(2) %></td>
+                                                                        <td class="item-quantity"><%= item.quantity %></td>
+                                    <td class="item-price"><%= (parseFloat(item.price) || 0).toFixed(2) %></td>
+                                    <td class="item-total"><%= (parseFloat(item.item_total) || 0).toFixed(2) %></td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-info me-1 edit-item-btn" data-bs-toggle="modal" data-bs-target="#editItemModal" data-item-id="<%= item.id %>">Ред.</button>
                                         <button class="btn btn-sm btn-outline-danger delete-item-btn" data-item-id="<%= item.id %>">Удл.</button>
@@ -163,7 +163,7 @@
                                     <label for="editQuantity" class="form-label">Количество</label>
                                     <input type="number" class="form-control" id="editQuantity" name="quantity" min="1" required>
                                 </div>
-                                <div class="mb-3">
+                                                                <div class="mb-3">
                                     <label for="editPrice" class="form-label">Цена за ед.</label>
                                     <input type="number" class="form-control" id="editPrice" name="price" step="0.01" min="0" required>
                                 </div>
@@ -281,8 +281,8 @@
                     }
                 });
 
-                document.getElementById('shippingCost').addEventListener('input', function() {
-                    const totalAmount = <%= (order.total_amount || 0) %>;
+                    document.getElementById('shippingCost').addEventListener('input', function() {
+                    const totalAmount = parseFloat(<%= (order.total_amount || 0) %>) || 0; // Обернули в parseFloat
                     const shippingCost = parseFloat(this.value) || 0;
                     const grandTotal = totalAmount + shippingCost;
 
