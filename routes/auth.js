@@ -12,20 +12,26 @@ router.get('/login', (req, res) => {
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
+  console.log('Попытка входа для:', username); // <-- Добавить
+  console.log('Введенный пароль (логгируем ВРЕМЕННО для отладки):', password); // <-- Добавить (удалите позже!)
+
   try {
     const user = await User.findByUsername(username);
+    console.log('Найден пользователь в БД:', user ? user.username : 'Не найден'); // <-- Добавить
 
     if (user && await User.comparePassword(password, user.password)) {
+      console.log('Пароль верен, создаем сессию'); // <-- Добавить
       req.session.isLoggedIn = true;
-      req.session.userId = user.id; // Сохраняем ID пользователя в сессии (если нужно)
-      req.session.username = user.username; // Сохраняем имя пользователя в сессии
+      req.session.userId = user.id;
+      req.session.username = user.username;
       return res.redirect('/dashboard');
     } else {
+      console.log('Пароль НЕ верен или пользователь не найден'); // <-- Добавить
       req.flash('error', 'Неправильный логин или пароль.');
       res.redirect('/login');
     }
   } catch (err) {
-    console.error(err);
+    console.error('Ошибка при входе:', err); // <-- Уточнить лог
     req.flash('error', 'Произошла ошибка при входе.');
     res.redirect('/login');
   }
