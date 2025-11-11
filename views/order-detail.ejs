@@ -57,7 +57,7 @@
                     <div class="mb-3">
                         <label for="orderDate" class="form-label">Дата заказа</label>
                         <input type="date" class="form-control" id="orderDate" name="orderDate"
-       value="<%= order ? (order.order_date instanceof Date ? order.order_date.toISOString().split('T')[0] : order.order_date) : new Date().toISOString().split('T')[0] %>">
+       value="<%= order ? (order.order_date instanceof Date ? order.order_date.getFullYear() + '-' + String(order.order_date.getMonth() + 1).padStart(2, '0') + '-' + String(order.order_date.getDate()).padStart(2, '0') : order.order_date) : new Date().toISOString().split('T')[0] %>">
     </div>
                     <div class="mb-3">
                         <label for="shippingCostChinaMoscow" class="form-label">Доставка Китай-Москва</label>
