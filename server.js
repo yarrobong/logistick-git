@@ -10,7 +10,7 @@ const path = require('path');
 // const authMiddleware = require('./middleware/auth'); // Закомментировано
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3040;
 
 // Настройка EJS как шаблонизатора
 app.set('view engine', 'ejs');
