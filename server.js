@@ -4,7 +4,6 @@ const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session); // Импортируем и вызываем
 const flash = require('connect-flash');
 const path = require('path');
-// const { Pool } = require('pg'); // Больше не нужно импортировать здесь напрямую
 
 // Импорты маршрутов и middleware
 const authRoutes = require('./routes/auth');
@@ -12,8 +11,8 @@ const orderRoutes = require('./routes/orders');
 const clientRoutes = require('./routes/clients');
 const authMiddleware = require('./middleware/auth');
 
-// Импортируем настройки подключения из config/database.js
-const db = require('./config/database');
+// Импортируем Pool из config/database.js
+const dbPool = require('./config/database'); // Теперь это Pool
 
 const app = express();
 const PORT = process.env.PORT || 3040;
@@ -29,10 +28,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Настройка сессии
 app.use(session({
+  store: new pgSession({
+    pool: dbPool, // Передаем Pool
+    tableName: 'session' // Имя таблицы для хранения сессий (по умолчанию 'session')
+  }),
   secret: 'your_secret_key_here', // Замените на случайный секретный ключ
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false } // Установите в true, если используете HTTPS
+  cookie: { 
+    secure: false, // Установите в true, если используете HTTPS
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 дней в миллисекундах (опционально)
+  }
 }));
 
 app.use(flash());
