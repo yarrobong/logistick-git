@@ -56,7 +56,7 @@ app.use((req, res, next) => {
 // Маршруты
 app.use('/', authRoutes);
 app.use('/orders', authMiddleware, orderRoutes);
-// app.use('/clients', authMiddleware, clientRoutes); // Пока закомментировано
+app.use('/clients', authMiddleware, clientRoutes); // Пока закомментировано
 
 // Корневой маршрут - перенаправляем на /orders после аутентификации
 app.get('/', authMiddleware, (req, res) => {

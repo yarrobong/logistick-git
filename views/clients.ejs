@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список Клиентов</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-dark text-light">
+    <%- include('partials/navbar') %>
+    <div class="container mt-4">
+        <h1>Список Клиентов</h1>
+
+        <% if (typeof clients !== 'undefined' && clients.length > 0) { %>
+            <div class="table-responsive">
+                <table class="table table-dark table-striped">
+                    <thead>
+                        <tr>
+                            <th>Имя</th>
+                            <th>Телефон</th>
+                            <th>Адрес</th>
+                            <th>Кол-во заказов</th>
+                            <th>Последний заказ</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% clients.forEach(client => { %>
+                            <tr>
+                                <td><a href="/clients/<%= client.id %>" class="text-decoration-none"><%= client.name %></a></td>
+                                <td><%= client.phone || 'N/A' %></td>
+                                <td><%= client.address || 'N/A' %></td>
+                                <td><%= client.orderCount || 0 %></td>
+                                <td><%= client.lastOrderDate ? new Date(client.lastOrderDate).toLocaleDateString('ru-RU') : 'N/A' %></td>
+                                <td>
+                                    <a href="/clients/<%= client.id %>" class="btn btn-sm btn-outline-light">Просмотр</a>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <p class="text-center">Клиентов пока нет.</p>
+        <% } %>
+
+        <!-- Flash сообщения -->
+        <% if (messages.error.length > 0) { %>
+            <% messages.error.forEach(msg => { %>
+                <div class="alert alert-danger"><%= msg %></div>
+            <% }); %>
+        <% } %>
+        <% if (messages.success.length > 0) { %>
+            <% messages.success.forEach(msg => { %>
+                <div class="alert alert-success"><%= msg %></div>
+            <% }); %>
+        <% } %>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/main.js"></script>
+</body>
+</html>

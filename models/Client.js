@@ -1,5 +1,6 @@
 // models/Client.js
 const db = require('../config/database');
+const Order = require('./Order'); // Импортируем Order для получения заказов
 
 const Client = {
   // Получить всех клиентов
@@ -12,6 +13,25 @@ const Client = {
   findById: async (id) => {
     const result = await db.query('SELECT * FROM clients WHERE id = $1', [id]);
     return result.rows[0];
+  },
+
+  // Получить клиента с его заказами
+  findByIdWithOrders: async (id) => {
+    const clientResult = await db.query('SELECT * FROM clients WHERE id = $1', [id]);
+    const client = clientResult.rows[0];
+    if (!client) return null;
+
+    // Получаем заказы клиента, отсортированные по дате
+    const ordersResult = await db.query(`
+        SELECT o.id, o.destination_city, o.status, o.order_date,
+               (o.total_amount + o.shipping_cost) AS total_with_shipping
+        FROM orders o
+        WHERE o.client_id = $1
+        ORDER BY o.order_date DESC
+    `, [id]);
+    client.orders = ordersResult.rows;
+
+    return client;
   },
 
   // Создать нового клиента
