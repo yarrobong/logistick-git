@@ -4,13 +4,14 @@ const session = require('express-session');
 const flash = require('connect-flash');
 const path = require('path');
 
-// const authRoutes = require('./routes/auth'); // Закомментировано
-// const orderRoutes = require('./routes/orders'); // Закомментировано
-// const clientRoutes = require('./routes/clients'); // Закомментировано
-// const authMiddleware = require('./middleware/auth'); // Закомментировано
+// Обязательно убедитесь, что файлы routes и middleware существуют и экспортируют правильные значения
+const authRoutes = require('./routes/auth'); // Раскомментировано
+const orderRoutes = require('./routes/orders'); // Раскомментировано
+const clientRoutes = require('./routes/clients'); // Раскомментировано
+const authMiddleware = require('./middleware/auth'); // Раскомментировано
 
 const app = express();
-const PORT = process.env.PORT || 3040;
+const PORT = process.env.PORT || 3040; // Обновил порт до 3040
 
 // Настройка EJS как шаблонизатора
 app.set('view engine', 'ejs');
@@ -37,21 +38,21 @@ app.use((req, res, next) => {
   next();
 });
 
-// Маршруты - ЗАКОММЕНТИРОВАНЫ
-// app.use('/', authRoutes);
-// app.use('/orders', authMiddleware, orderRoutes);
-// app.use('/clients', authMiddleware, clientRoutes);
+// Маршруты - РАСКОММЕНТИРОВАНЫ
+app.use('/', authRoutes); // <-- Раскомментировано
+app.use('/orders', authMiddleware, orderRoutes); // <-- Раскомментировано
+app.use('/clients', authMiddleware, clientRoutes); // <-- Раскомментировано
 
 // Главная страница (после авторизации)
-// app.get('/dashboard', authMiddleware, (req, res) => {
-//   res.render('dashboard');
-// });
+app.get('/dashboard', authMiddleware, (req, res) => {
+  res.render('dashboard');
+});
 
-// Обработка 404
-// app.use((req, res) => {
-//   res.status(404).render('404');
-// });
+// Обработка 404 - РАСКОММЕНТИРОВАНО
+app.use((req, res) => {
+  res.status(404).render('404');
+});
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`); // Обновил лог
 });
