@@ -31,11 +31,24 @@ router.get('/new', async (req, res) => {
 // POST /orders - создать новый заказ
 router.post('/', async (req, res) => {
   // console.log(req.body); // Для отладки
-  const { clientId, destinationCity, status, orderDate, shippingCost,
-          intermediaryChinaMoscow, trackingNumberChinaMoscow,
-          intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
+  let { clientId, destinationCity, status, orderDate, shippingCost,
+        intermediaryChinaMoscow, trackingNumberChinaMoscow,
+        intermediaryMoscowDestination, trackingNumberMoscowDestination,
+        newClientName, newClientPhone } = req.body; // Получаем данные нового клиента
 
   try {
+    // Если выбрано "Выберите клиента" и введены данные нового клиента
+    if (!clientId && newClientName && newClientPhone) {
+        // Создаем нового клиента
+        const newClient = await Client.create(newClientName, newClientPhone, null); // address пока null
+        clientId = newClient.id; // Используем ID нового клиента
+    } else if (!clientId && (!newClientName || !newClientPhone)) {
+        // Если выбрано "Выберите клиента" но данные нового клиента не введены
+        req.flash('error', 'Пожалуйста, выберите клиента или введите данные нового клиента.');
+        return res.redirect('/orders/new');
+    }
+    // Если clientId уже был выбран, используем его как есть
+
     const orderId = await Order.create(clientId, destinationCity, status, orderDate, shippingCost,
                                       intermediaryChinaMoscow, trackingNumberChinaMoscow,
                                       intermediaryMoscowDestination, trackingNumberMoscowDestination);
@@ -85,6 +98,7 @@ router.post('/:id', async (req, res) => {
   }
 
   try {
+    // При редактировании можно только выбрать существующего клиента
     await Order.update(orderId, clientId, destinationCity, status, shippingCost,
                        intermediaryChinaMoscow, trackingNumberChinaMoscow,
                        intermediaryMoscowDestination, trackingNumberMoscowDestination);
