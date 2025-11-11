@@ -30,13 +30,14 @@ router.get('/new', async (req, res) => {
 
 // POST /orders - создать новый заказ
 router.post('/', async (req, res) => {
-  // console.log(req.body); // Для отладки
-  const { clientName, clientPhone, destinationCity, status, orderDate,
-          shippingCostChinaMoscow, shippingCostMoscowDestination, // Обновленные поля
+  // ДОБАВЬТЕ orderDate СЮДА
+  const { clientName, clientPhone, destinationCity, status, orderDate, // <-- orderDate добавлено
+          shippingCostChinaMoscow, shippingCostMoscowDestination,
           intermediaryChinaMoscow, trackingNumberChinaMoscow,
           intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
 
-console.log('DEBUG POST /: req.body.orderDate =', orderDate, 'Type:', typeof orderDate);
+  // --- ДОБАВЬТЕ ЭТУ СТРОКУ ---
+  console.log('DEBUG POST /: req.body.orderDate =', orderDate, 'Type:', typeof orderDate);
 
   // Проверяем, что имя клиента введено
   if (!clientName) {
@@ -115,12 +116,14 @@ router.get('/:id', async (req, res) => {
 // PUT /orders/:id - обновить заказ (используем POST с _method=PUT)
 router.post('/:id', async (req, res) => {
   const orderId = parseInt(req.params.id, 10);
-  const { clientName, clientPhone, destinationCity, status,
-          shippingCostChinaMoscow, shippingCostMoscowDestination, // Обновленные поля
+  // ДОБАВЬТЕ orderDate СЮДА
+  const { clientName, clientPhone, destinationCity, status, orderDate, // <-- orderDate добавлено
+          shippingCostChinaMoscow, shippingCostMoscowDestination,
           intermediaryChinaMoscow, trackingNumberChinaMoscow,
           intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
 
-            console.log('DEBUG PUT /:id: req.body.orderDate =', orderDate, 'Type:', typeof orderDate);
+  // --- ДОБАВЬТЕ ЭТУ СТРОКУ ---
+  console.log('DEBUG PUT /:id: req.body.orderDate =', orderDate, 'Type:', typeof orderDate);
 
   if (isNaN(orderId)) {
     req.flash('error', 'Неверный ID заказа.');
