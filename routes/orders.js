@@ -36,6 +36,8 @@ router.post('/', async (req, res) => {
           intermediaryChinaMoscow, trackingNumberChinaMoscow,
           intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
 
+console.log('DEBUG POST /: req.body.orderDate =', orderDate, 'Type:', typeof orderDate);
+
   // Проверяем, что имя клиента введено
   if (!clientName) {
     req.flash('error', 'Имя клиента обязательно.');
@@ -117,6 +119,8 @@ router.post('/:id', async (req, res) => {
           shippingCostChinaMoscow, shippingCostMoscowDestination, // Обновленные поля
           intermediaryChinaMoscow, trackingNumberChinaMoscow,
           intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
+
+            console.log('DEBUG PUT /:id: req.body.orderDate =', orderDate, 'Type:', typeof orderDate);
 
   if (isNaN(orderId)) {
     req.flash('error', 'Неверный ID заказа.');
