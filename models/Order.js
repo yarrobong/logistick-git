@@ -35,19 +35,29 @@ const Order = {
   },
 
   // Создать новый заказ
-  create: async (clientId, destinationCity, status, orderDate, shippingCost) => {
+  create: async (clientId, destinationCity, status, orderDate, shippingCost, intermediaryChinaMoscow, trackingNumberChinaMoscow, intermediaryMoscowDestination, trackingNumberMoscowDestination) => {
     const result = await db.query(
-      'INSERT INTO orders (client_id, destination_city, status, order_date, shipping_cost) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-      [clientId, destinationCity, status, orderDate, shippingCost || 0]
+      `INSERT INTO orders (client_id, destination_city, status, order_date, shipping_cost,
+                           intermediary_china_moscow, tracking_number_china_moscow,
+                           intermediary_moscow_destination, tracking_number_moscow_destination)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+      [clientId, destinationCity, status, orderDate, shippingCost || 0,
+       intermediaryChinaMoscow, trackingNumberChinaMoscow,
+       intermediaryMoscowDestination, trackingNumberMoscowDestination]
     );
     return result.rows[0].id; // Возвращаем ID созданного заказа
   },
 
   // Обновить заказ
-  update: async (id, clientId, destinationCity, status, shippingCost) => {
+  update: async (id, clientId, destinationCity, status, shippingCost, intermediaryChinaMoscow, trackingNumberChinaMoscow, intermediaryMoscowDestination, trackingNumberMoscowDestination) => {
     await db.query(
-      'UPDATE orders SET client_id = $1, destination_city = $2, status = $3, shipping_cost = $4 WHERE id = $5',
-      [clientId, destinationCity, status, shippingCost || 0, id]
+      `UPDATE orders SET client_id = $1, destination_city = $2, status = $3, shipping_cost = $4,
+                           intermediary_china_moscow = $5, tracking_number_china_moscow = $6,
+                           intermediary_moscow_destination = $7, tracking_number_moscow_destination = $8
+       WHERE id = $9`,
+      [clientId, destinationCity, status, shippingCost || 0,
+       intermediaryChinaMoscow, trackingNumberChinaMoscow,
+       intermediaryMoscowDestination, trackingNumberMoscowDestination, id]
     );
   },
 

@@ -29,19 +29,38 @@
                     </div>
                     <div class="mb-3">
                         <label for="destinationCity" class="form-label">Город получателя</label>
-                        <input type="text" class="form-control" id="destinationCity" name="destinationCity" value="<%= order ? order.destination_city : '' %>">
+                        <input type="text" class="form-control" id="destinationCity" name="destinationCity" value="<%= order ? order.destination_city : '' %>" required>
                     </div>
                     <div class="mb-3">
                         <label for="status" class="form-label">Статус</label>
-                        <input type="text" class="form-control" id="status" name="status" value="<%= order ? order.status : 'Создан' %>">
+                        <input type="text" class="form-control" id="status" name="status" value="<%= order ? order.status : 'Создан' %>" required>
                     </div>
                     <div class="mb-3">
                         <label for="orderDate" class="form-label">Дата заказа</label>
-                        <input type="date" class="form-control" id="orderDate" name="orderDate" value="<%= order ? order.order_date : new Date().toISOString().split('T')[0] %>">
+                        <input type="date" class="form-control" id="orderDate" name="orderDate" value="<%= order ? order.order_date : new Date().toISOString().split('T')[0] %>" required>
                     </div>
                     <div class="mb-3">
-                        <label for="shippingCost" class="form-label">Стоимость доставки</label>
+                        <label for="shippingCost" class="form-label">Стоимость доставки (общая)</label>
                         <input type="number" class="form-control" id="shippingCost" name="shippingCost" step="0.01" value="<%= order ? order.shipping_cost : '0.00' %>">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h4>Этапы доставки</h4>
+                    <div class="mb-3">
+                        <label for="intermediaryChinaMoscow" class="form-label">Посредник Китай-Москва</label>
+                        <input type="text" class="form-control" id="intermediaryChinaMoscow" name="intermediaryChinaMoscow" value="<%= order ? order.intermediary_china_moscow : '' %>">
+                    </div>
+                    <div class="mb-3">
+                        <label for="trackingNumberChinaMoscow" class="form-label">Трек-номер Китай-Москва</label>
+                        <input type="text" class="form-control" id="trackingNumberChinaMoscow" name="trackingNumberChinaMoscow" value="<%= order ? order.tracking_number_china_moscow : '' %>">
+                    </div>
+                    <div class="mb-3">
+                        <label for="intermediaryMoscowDestination" class="form-label">Посредник Москва-Город</label>
+                        <input type="text" class="form-control" id="intermediaryMoscowDestination" name="intermediaryMoscowDestination" value="<%= order ? order.intermediary_moscow_destination : '' %>">
+                    </div>
+                    <div class="mb-3">
+                        <label for="trackingNumberMoscowDestination" class="form-label">Трек-номер Москва-Город</label>
+                        <input type="text" class="form-control" id="trackingNumberMoscowDestination" name="trackingNumberMoscowDestination" value="<%= order ? order.tracking_number_moscow_destination : '' %>">
                     </div>
                 </div>
             </div>
@@ -161,80 +180,75 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/main.js"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const editModal = document.getElementById('editItemModal');
-        const editForm = document.getElementById('editItemForm');
-        const saveBtn = document.getElementById('saveItemChangesBtn');
-        const itemsTableBody = document.getElementById('itemsTableBody');
+        document.addEventListener('DOMContentLoaded', function () {
+            const editModal = document.getElementById('editItemModal');
+            const editForm = document.getElementById('editItemForm');
+            const saveBtn = document.getElementById('saveItemChangesBtn');
+            const itemsTableBody = document.getElementById('itemsTableBody');
 
-        // Проверяем, существовала ли переменная 'order' при рендеринге (т.е. мы на странице редактирования)
-        // Если order был передан (не null), то EJS сгенерирует число, иначе ничего не будет сгенерировано для этого блока
-        <% if (order) { %>
-            const orderId = <%= order.id %>; // orderId теперь всегда число, если блок исполняется
+            // Проверяем, существовала ли переменная 'order' при рендеринге (т.е. мы на странице редактирования)
+            <% if (order) { %>
+                const orderId = <%= order.id %>; // orderId теперь всегда число, если блок исполняется
 
-            editModal.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-                const itemId = button.getAttribute('data-item-id');
-                const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
-                if (!row) return;
+                editModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const itemId = button.getAttribute('data-item-id');
+                    const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+                    if (!row) return;
 
-                const name = row.querySelector('.item-name').textContent;
-                const quantity = row.querySelector('.item-quantity').textContent;
-                const price = row.querySelector('.item-price').textContent;
+                    const name = row.querySelector('.item-name').textContent;
+                    const quantity = row.querySelector('.item-quantity').textContent;
+                    const price = row.querySelector('.item-price').textContent;
 
-                document.getElementById('editItemId').value = itemId;
-                document.getElementById('editProductName').value = name;
-                document.getElementById('editQuantity').value = parseInt(quantity);
-                document.getElementById('editPrice').value = parseFloat(price);
+                    document.getElementById('editItemId').value = itemId;
+                    document.getElementById('editProductName').value = name;
+                    document.getElementById('editQuantity').value = parseInt(quantity);
+                    document.getElementById('editPrice').value = parseFloat(price);
 
-                // Используем переменную orderId
-                editForm.action = `/orders/${orderId}/items/${itemId}`;
-            });
+                    editForm.action = `/orders/${orderId}/items/${itemId}`;
+                });
 
-            saveBtn.addEventListener('click', function () {
-                editForm.submit();
-            });
+                saveBtn.addEventListener('click', function () {
+                    editForm.submit();
+                });
 
-            itemsTableBody.addEventListener('click', function(e) {
-                if (e.target.classList.contains('delete-item-btn')) {
-                    const itemId = e.target.getAttribute('data-item-id');
-                    if (confirm('Вы уверены, что хотите удалить этот товар?')) {
-                        // Используем переменную orderId
-                        fetch(`/orders/${orderId}/items/${itemId}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                        .then(response => {
-                            if (response.ok) {
-                                const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
-                                if (row) row.remove();
-                                location.reload();
-                            } else {
+                itemsTableBody.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('delete-item-btn')) {
+                        const itemId = e.target.getAttribute('data-item-id');
+                        if (confirm('Вы уверены, что хотите удалить этот товар?')) {
+                            fetch(`/orders/${orderId}/items/${itemId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            })
+                            .then(response => {
+                                if (response.ok) {
+                                    const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+                                    if (row) row.remove();
+                                    location.reload();
+                                } else {
+                                    alert('Ошибка при удалении товара.');
+                                }
+                            })
+                            .catch(err => {
+                                console.error('Error:', err);
                                 alert('Ошибка при удалении товара.');
-                            }
-                        })
-                        .catch(err => {
-                            console.error('Error:', err);
-                            alert('Ошибка при удалении товара.');
-                        });
+                            });
+                        }
                     }
-                }
-            });
+                });
 
-            document.getElementById('shippingCost').addEventListener('input', function() {
-                // Используем значение из EJS для начальной суммы
-                const totalAmount = <%= (order.total_amount || 0) %>;
-                const shippingCost = parseFloat(this.value) || 0;
-                const grandTotal = totalAmount + shippingCost;
+                document.getElementById('shippingCost').addEventListener('input', function() {
+                    const totalAmount = <%= (order.total_amount || 0) %>;
+                    const shippingCost = parseFloat(this.value) || 0;
+                    const grandTotal = totalAmount + shippingCost;
 
-                document.getElementById('shippingCostDisplay').textContent = shippingCost.toFixed(2);
-                document.getElementById('grandTotalDisplay').textContent = grandTotal.toFixed(2);
-            });
-        <% } %>
-        // Закрывающая скобка для if (order) не нужна, просто завершаем блок EJS
-    });
-</script>
+                    document.getElementById('shippingCostDisplay').textContent = shippingCost.toFixed(2);
+                    document.getElementById('grandTotalDisplay').textContent = grandTotal.toFixed(2);
+                });
+            <% } %>
+        });
+    </script>
 </body>
 </html>

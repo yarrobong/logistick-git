@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
-const Client = require('../models/Client'); // Потребуется для получения списка клиентов при создании/редактировании
+const Client = require('../models/Client');
 
 // GET /orders - отобразить список всех заказов
 router.get('/', async (req, res) => {
@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке заказов.');
-    res.redirect('/dashboard'); // Или на другую страницу
+    res.redirect('/dashboard');
   }
 });
 
@@ -30,11 +30,15 @@ router.get('/new', async (req, res) => {
 
 // POST /orders - создать новый заказ
 router.post('/', async (req, res) => {
-  const { clientId, destinationCity, status, orderDate, shippingCost } = req.body;
   // console.log(req.body); // Для отладки
+  const { clientId, destinationCity, status, orderDate, shippingCost,
+          intermediaryChinaMoscow, trackingNumberChinaMoscow,
+          intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
 
   try {
-    const orderId = await Order.create(clientId, destinationCity, status, orderDate, shippingCost);
+    const orderId = await Order.create(clientId, destinationCity, status, orderDate, shippingCost,
+                                      intermediaryChinaMoscow, trackingNumberChinaMoscow,
+                                      intermediaryMoscowDestination, trackingNumberMoscowDestination);
     req.flash('success', 'Заказ успешно создан.');
     res.redirect(`/orders/${orderId}`); // Перенаправляем на страницу деталей нового заказа
   } catch (err) {
@@ -71,7 +75,9 @@ router.get('/:id', async (req, res) => {
 // PUT /orders/:id - обновить заказ (используем POST с _method=PUT)
 router.post('/:id', async (req, res) => {
   const orderId = parseInt(req.params.id, 10);
-  const { clientId, destinationCity, status, shippingCost } = req.body;
+  const { clientId, destinationCity, status, shippingCost,
+          intermediaryChinaMoscow, trackingNumberChinaMoscow,
+          intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
 
   if (isNaN(orderId)) {
     req.flash('error', 'Неверный ID заказа.');
@@ -79,7 +85,9 @@ router.post('/:id', async (req, res) => {
   }
 
   try {
-    await Order.update(orderId, clientId, destinationCity, status, shippingCost);
+    await Order.update(orderId, clientId, destinationCity, status, shippingCost,
+                       intermediaryChinaMoscow, trackingNumberChinaMoscow,
+                       intermediaryMoscowDestination, trackingNumberMoscowDestination);
     req.flash('success', 'Заказ успешно обновлен.');
     res.redirect(`/orders/${orderId}`);
   } catch (err) {
@@ -101,7 +109,7 @@ router.delete('/:id', async (req, res) => {
   try {
     await Order.delete(orderId);
     req.flash('success', 'Заказ успешно удален.');
-    res.status(200).send('OK'); // Ответ для AJAX
+    res.status(200).send('OK');
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при удалении заказа.');
@@ -185,7 +193,7 @@ router.delete('/:orderId/items/:itemId', async (req, res) => {
   try {
     await Order.deleteItem(itemId);
     req.flash('success', 'Товар успешно удален.');
-    res.status(200).send('OK'); // Ответ для AJAX
+    res.status(200).send('OK');
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при удалении товара.');
