@@ -21,6 +21,8 @@ const PORT = process.env.PORT || 3040;
 // Настройка EJS как шаблонизатора
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.engine('ejs', ejs.renderFile);
+app.locals._layoutFile = false; // если используете layouts
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
