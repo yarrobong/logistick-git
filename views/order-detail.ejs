@@ -50,10 +50,7 @@
                    <div class="mb-3">
                         <label for="status" class="form-label">Статус</label>
                         <select class="form-select" id="status" name="status" required>
-                            <% if (order) { %>
-                                <!-- Если редактируем, показываем текущий статус как опцию, даже если его нет в списке -->
-                                <option value="<%= order.status %>" selected><%= order.status %> (Текущий)</option>
-                            <% } %>
+                           
                             <option value="" <%= (!order || order.status === '') ? 'selected' : '' %>>Выберите статус</option>
                             <% STATUS_CONFIG.ORDER_STATUSES.forEach(status => { %>
                                 <option value="<%= status.value %>" <%= (order && order.status === status.value) ? 'selected' : '' %>><%= status.label %></option>
