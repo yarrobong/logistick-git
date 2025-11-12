@@ -292,7 +292,7 @@ router.post('/:orderId/items/:itemId', async (req, res) => {
       console.error(err);
       return res.status(500).json({ error: 'Error updating item' });
     }
-  }
+  };
 
 // PUT /orders/:orderId/items/:itemId - обновить товар в заказе (используем POST с _method=PUT)
 router.post('/:orderId/items/:itemId', async (req, res) => {
