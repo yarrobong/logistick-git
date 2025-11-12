@@ -223,14 +223,10 @@
         console.log("Кнопка удаления нажата, готов к отправке запроса!"); // <-- Добавьте это
         if (confirm('Вы уверены, что хотите УДАЛИТЬ этот заказ?')) {
             console.log("Подтверждение получено, отправляю fetch..."); // <-- И это
-            fetch(`/orders/${orderId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-Requested-With': 'XMLHttpRequest' // Опционально
-                },
-                body: '_method=DELETE'
-            })
+            fetch(`/orders/${orderId}?_method=DELETE`, {
+  method: 'POST',
+  headers: { 'X-Requested-With': 'XMLHttpRequest' }
+})
             .then(response => {
                 console.log("Ответ получен:", response.status); // <-- И это
                 if (response.ok) {
@@ -279,12 +275,10 @@
                     if (e.target.classList.contains('delete-item-btn')) {
                         const itemId = e.target.getAttribute('data-item-id');
                         if (confirm('Вы уверены, что хотите удалить этот товар?')) {
-                            fetch(`/orders/${orderId}/items/${itemId}`, {
-                                method: 'DELETE',
-                                headers: {
-                                    'X-Requested-With': 'XMLHttpRequest'
-                                }
-                            })
+                            fetch(`/orders/${orderId}?_method=DELETE`, {
+  method: 'POST',
+  headers: { 'X-Requested-With': 'XMLHttpRequest' }
+})
                             .then(response => {
                                 if (response.ok) {
                                     const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
