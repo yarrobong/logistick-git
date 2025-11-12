@@ -106,6 +106,52 @@
   </div>
 
   <script>
+
+    async function addItem(orderId) {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td><input type="text" class="product-name" placeholder="Название"></td>
+        <td><input type="number" class="quantity" value="1" min="1"></td>
+        <td><input type="number" class="price" value="0" min="0"></td>
+        <td class="total">0</td>
+        <td><button class="save-btn">💾</button></td>
+    `;
+
+    document.querySelector('#items-table tbody').appendChild(row);
+
+    row.querySelector('.save-btn').addEventListener('click', async () => {
+        const product_name = row.querySelector('.product-name').value.trim();
+        const quantity = parseInt(row.querySelector('.quantity').value);
+        const price = parseFloat(row.querySelector('.price').value);
+        const total = quantity * price;
+
+        if (!product_name) {
+            alert('Введите название товара');
+            return;
+        }
+
+        const res = await fetch(`/orders/${orderId}/items`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_name, quantity, price, total })
+        });
+
+        if (res.ok) {
+            const item = await res.json();
+            row.innerHTML = `
+                <td>${item.product_name}</td>
+                <td>${item.quantity}</td>
+                <td>${item.price}</td>
+                <td>${item.total}</td>
+                <td><button class="delete-btn">🗑️</button></td>
+            `;
+        } else {
+            const err = await res.text();
+            console.error('Ошибка добавления:', err);
+        }
+    });
+}
+
     document.addEventListener("DOMContentLoaded", () => {
       const orderId = <%= order ? order.id : 'null' %>;
 

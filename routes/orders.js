@@ -229,7 +229,23 @@ router.post('/:id/archive', async (req, res) => {
 // POST /orders/:orderId/items - добавить товар в заказ
 router.post('/:orderId/items', async (req, res) => {
   const orderId = parseInt(req.params.orderId, 10);
-  const { productName, quantity, price } = req.body;
+  let { productName, name, quantity, price } = req.body;
+const finalProductName = productName || name;
+
+if (!finalProductName || finalProductName.trim() === '') {
+  req.flash('error', 'Название товара обязательно.');
+  return res.redirect(`/orders/${orderId}`);
+}
+
+try {
+  await Order.addItem(orderId, finalProductName.trim(), parseInt(quantity, 10), parseFloat(price));
+  req.flash('success', 'Товар успешно добавлен.');
+  res.redirect(`/orders/${orderId}`);
+} catch (err) {
+  console.error(err);
+  req.flash('error', 'Ошибка при добавлении товара.');
+  res.redirect(`/orders/${orderId}`);
+}
 
   if (isNaN(orderId)) {
     req.flash('error', 'Неверный ID заказа.');
