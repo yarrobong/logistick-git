@@ -1,5 +1,5 @@
 <!-- views/partials/navbar.ejs -->
-<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #213040;"> <!-- Убран класс sticky-top -->
+<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #213040;">
     <div class="container-fluid px-3 px-md-4 px-lg-5">
         <div class="d-flex flex-column flex-lg-row justify-content-between w-100">
             <div class="d-flex align-items-center mb-2 mb-lg-0">
@@ -9,31 +9,27 @@
                 </button>
             </div>
 
-            <div class="d-flex flex-column flex-lg-row w-100 w-lg-auto">
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto me-lg-4">
-                        <li class="nav-item">
-                            <a class="nav-link fs-6" href="/orders">Заказы</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link fs-6" href="/clients">Клиенты</a>
-                        </li>
-                    </ul>
-                </div>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto me-lg-4">
+                    <li class="nav-item">
+                        <a class="nav-link fs-6" href="/orders">Заказы</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fs-6" href="/clients">Клиенты</a>
+                    </li>
+                </ul>
 
-                <div class="d-flex align-items-center">
-                    <span class="navbar-text me-3 text-light d-none d-lg-block">
-                        Привет, <%= typeof session !== 'undefined' && session.username ? session.username : 'Админ' %>!
-                    </span>
-                    <span class="navbar-text me-3 text-light d-lg-none">
-                        <%= typeof session !== 'undefined' && session.username ? session.username : 'Админ' %>
-                    </span>
-                    <ul class="navbar-nav mb-0">
-                        <li class="nav-item">
-                            <a class="nav-link btn btn-outline-light btn-sm py-1 px-3" href="/logout">Выйти</a>
-                        </li>
-                    </ul>
-                </div>
+                <!-- Блок с пользователем и выходом внутри меню -->
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <span class="navbar-text me-3 text-light">
+                            Привет, <%= typeof session !== 'undefined' && session.username ? session.username : 'Админ' %>!
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-light btn-sm py-1 px-3" href="/logout">Выйти</a>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
