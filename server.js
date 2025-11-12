@@ -58,13 +58,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Маршруты
+// --- ГЛОБАЛЬНЫЕ МАРШРУТЫ СНАЧАЛА ---
+app.get('/', authMiddleware, (req, res) => res.redirect('/orders'));
+app.get('/dashboard', authMiddleware, (req, res) => res.redirect('/orders'));
+
+// --- ПОТОМ ОСТАЛЬНЫЕ МАРШРУТЫ ---
 app.use('/', authRoutes);
 app.use('/orders', authMiddleware, orderRoutes);
 app.use('/clients', authMiddleware, clientRoutes);
-
-app.get('/', authMiddleware, (req, res) => res.redirect('/orders'));
-app.get('/dashboard', authMiddleware, (req, res) => res.redirect('/orders'));
 
 // 404
 app.use((req, res) => res.status(404).render('404'));
