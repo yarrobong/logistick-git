@@ -25,16 +25,18 @@ function renderClientDetail(res, view, data) {
 router.get('/', async (req, res) => {
   try {
     const clients = await Client.findAll();
-    
-    // Добавляем количество заказов и дату последнего заказа
-    for (let client of clients) {
-      const allOrders = await Order.findAll();
-      const clientOrders = allOrders.filter(order => order.client_id === client.id);
-      client.orderCount = clientOrders.length;
-      client.lastOrderDate = clientOrders.length > 0 ? clientOrders[0].order_date : null;
-    }
+    const allOrders = await Order.findAll(); // один раз
 
-    renderClientDetail(res, 'clients', { clients });
+    // Добавляем количество заказов и дату последнего заказа
+    clients.forEach(client => {
+      const clientOrders = allOrders.filter(o => o.client_id === client.id);
+      client.orderCount = clientOrders.length;
+      client.lastOrderDate = clientOrders.length > 0
+        ? clientOrders.sort((a,b) => new Date(b.order_date) - new Date(a.order_date))[0].order_date
+        : null;
+    });
+
+    res.render('clients', { clients });
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке клиентов.');
@@ -71,32 +73,19 @@ router.post('/', async (req, res) => {
 // GET /clients/:id - детали клиента
 router.get('/:id', async (req, res) => {
   const clientId = parseInt(req.params.id, 10);
-
   if (isNaN(clientId)) {
     req.flash('error', 'Неверный ID клиента.');
     return res.redirect('/clients');
   }
 
   try {
-    const client = await Client.findById(clientId);
+    const client = await Client.findByIdWithOrders(clientId); // используем метод с join
     if (!client) {
       req.flash('error', 'Клиент не найден.');
       return res.redirect('/clients');
     }
 
-    // Получаем заказы клиента
-    const allOrders = await Order.findAll();
-    client.orders = allOrders.filter(order => order.client_id === clientId);
-console.log('ClientId:', clientId);
-console.log('Found client:', client);
-console.log('Orders:', client.orders.length);
-    // Вот ключевой момент: filename передается в **опциях**, а не в данных
-    res.render('client-detail', {
-  client,
-  STATUS_CONFIG,
-  messages: { error: req.flash('error'), success: req.flash('success') },
-  session: req.session
-});
+    res.render('client-detail', { client });
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке деталей клиента.');

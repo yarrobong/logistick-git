@@ -20,10 +20,9 @@ const app = express(); // <-- нужно объявить ДО app.use
 const PORT = process.env.PORT || 3040;
 
 // Настройка EJS
-app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-
 app.engine('ejs', ejs.renderFile);
+app.set('view engine', 'ejs');
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
