@@ -146,6 +146,26 @@
     margin-top: 0.5rem; /* Отступ сверху */
   }
   }
+
+  /* На экранах шириной менее 1000px */
+  @media (max-width: 999.98px) {
+    .item-details {
+      flex-direction: column; /* Вертикальное размещение */
+      align-items: flex-start; /* Выравнивание по левому краю */
+      gap: 0.25rem; /* Меньше отступов */
+    }
+
+    .item-details > div {
+      width: 100%; /* Занимает всю ширину */
+      justify-content: space-between; /* Распределяет элементы по краям */
+    }
+
+    .item-actions {
+      opacity: 1; /* Всегда видно на мобильных */
+      margin-top: 0.5rem; /* Отступ сверху */
+      align-self: flex-end; /* Кнопка справа */
+    }
+  }
 </style>
 </head>
 <body>
