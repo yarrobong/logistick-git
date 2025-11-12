@@ -25,7 +25,7 @@
                             <th>Клиент</th>
                             <th>Город</th>
                             <th>Статус</th>
-                            <th>Сумма (с доставкой)</th>
+                            <th>Сумма (с доставкой)</th> <!-- Добавлен столбец Сумма -->
                             <th>Действия</th>
                         </tr>
                     </thead>
@@ -36,13 +36,17 @@
                                 <td><%= order.order_date ? new Date(order.order_date).toLocaleDateString('ru-RU') : 'N/A' %></td>
                                 <td><%= order.client_name || 'N/A' %></td>
                                 <td><%= order.destination_city || 'N/A' %></td>
-                                                            <td>
-                                <% const statusConfig = STATUS_CONFIG.ORDER_STATUSES.find(s => s.value === order.status); %>
-                                <span class="badge bg-<%= statusConfig ? statusConfig.color : 'secondary' %>">
-                                    <%= order.status %>
-                                </span>
-                            </td>
-                                                             <td>
+                                <!-- Столбец Статус -->
+                                <td>
+                                    <% const statusConfig = STATUS_CONFIG.ORDER_STATUSES.find(s => s.value === order.status); %>
+                                    <span class="badge bg-<%= statusConfig ? statusConfig.color : 'secondary' %>">
+                                        <%= order.status %>
+                                    </span>
+                                </td>
+                                <!-- Столбец Сумма (с доставкой) -->
+                                <td><%= (parseFloat(order.total_with_shipping) || 0).toFixed(2) %></td>
+                                <!-- Столбец Действия -->
+                                <td>
                                     <a href="/orders/<%= order.id %>" class="btn btn-sm btn-outline-light me-1">Просмотр</a>
                                     <form action="/orders/<%= order.id %>/archive" method="POST" class="d-inline">
                                         <button type="submit" class="btn btn-sm btn-outline-warning me-1" onclick="return confirm('Вы уверены, что хотите архивировать этот заказ?')">Архив</button>
