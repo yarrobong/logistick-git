@@ -7,7 +7,11 @@ const Order = {
     // Запрос включает общую сумму заказа и имя клиента, и общую стоимость доставки
     const result = await db.query(`
         SELECT o.id, o.client_id, c.name as client_name, o.destination_city, o.status, o.order_date,
-               (o.total_amount + o.shipping_cost_china_moscow + o.shipping_cost_moscow_destination) AS total_with_shipping
+               (o.total_amount + o.shipping_cost_china_moscow + o.shipping_cost_moscow_destination) AS total_with_shipping,
+               o.intermediary_china_moscow,
+               o.tracking_number_china_moscow,
+               o.intermediary_moscow_destination,
+               o.tracking_number_moscow_destination
         FROM orders o
         LEFT JOIN clients c ON o.client_id = c.id
         ORDER BY o.order_date DESC
