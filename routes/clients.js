@@ -79,16 +79,15 @@ router.get('/:id', async (req, res) => {
   }
 
   try {
-    // Берем клиента вместе с заказами
+    // Берём клиента вместе с заказами
     const client = await Client.findByIdWithOrders(clientId);
     if (!client) {
       req.flash('error', 'Клиент не найден.');
       return res.redirect('/clients');
     }
 
-    // В res.render передаем только данные, без filename
-    res.render('client-detail', { 
-      client, 
+    res.render('client-detail', {
+      client,
       STATUS_CONFIG: res.locals.STATUS_CONFIG,
       messages: res.locals.messages,
       session: req.session
