@@ -6,32 +6,32 @@
   <title><%= order ? `Заказ #${order.id}` : 'Новый Заказ' %></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
    <style>
-    /* Цвета фона и текста */
+    /* Темная тема как в Telegram */
     body { 
-      background-color: #1e1e2e; /* Темно-серый с фиолетовым оттенком */
-      color: #e0e0f0; /* Светло-серый с синеватым оттенком */
+      background-color: #0b0b0b; /* Очень тёмный фон как в ТГ */
+      color: #ffffff; /* Белый текст */
     }
 
     /* Стили для карточек товаров */
     .item-card {
-      background-color: #2d2d44; /* Темно-фиолетовый */
-      border: 1px solid #4a4a6a; /* Более светлая граница */
+      background-color: #1c1c1c; /* Тёмно-серый как в ТГ */
+      border: 1px solid #2d2d2d; /* Более тёмная граница */
       border-radius: .5rem;
       transition: .2s;
     }
     .item-card:hover { 
-      box-shadow: 0 0 10px rgba(100, 100, 200, 0.3); /* Светло-фиолетовая тень при наведении */
-      border-color: #6a6a9f; /* Более яркая граница при наведении */
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Тёмная тень */
+      border-color: #3a3a3a; /* Более светлая граница при наведении */
     }
 
     /* Стили для редактируемых полей */
     .editable-field { 
       cursor: pointer; 
       border-bottom: 1px dashed transparent; 
-      color: #a3bffa; /* Светло-голубой цвет для редактируемых полей */
+      color: #85c1ff; /* Светло-голубой как в ТГ */
     }
     .editable-field:hover { 
-      border-bottom: 1px dashed #86b7fe; 
+      border-bottom: 1px dashed #85c1ff; 
     }
 
     /* Стили для действий с карточкой */
@@ -45,48 +45,49 @@
 
     /* Кнопки */
     .btn-outline-light {
-      border-color: #6a6a9f; /* Цвет границы */
-      color: #d0d0f0; /* Цвет текста */
+      border-color: #3a3a3a; /* Тёмная граница */
+      color: #d0d0d0; /* Светло-серый текст */
+      background-color: transparent;
     }
     .btn-outline-light:hover {
-      background-color: #6a6a9f; /* Цвет фона при наведении */
-      color: #ffffff; /* Цвет текста при наведении */
+      background-color: #3a3a3a; /* Тёмный фон при наведении */
+      color: #ffffff; /* Белый текст */
     }
 
     .btn-success {
-      background-color: #4caf8b; /* Темно-зелёный */
-      border-color: #4caf8b;
+      background-color: #0088cc; /* Сине-зелёный как в ТГ */
+      border-color: #0088cc;
     }
     .btn-success:hover {
-      background-color: #3d8b6d; /* Более темный зелёный */
-      border-color: #3d8b6d;
+      background-color: #0077b3; /* Более тёмный */
+      border-color: #0077b3;
     }
 
     .btn-outline-danger {
-      color: #f57c7c; /* Светло-красный */
-      border-color: #f57c7c;
+      color: #ff3b30; /* Красный как в ТГ */
+      border-color: #ff3b30;
     }
     .btn-outline-danger:hover {
-      background-color: #f57c7c; /* Красный фон */
+      background-color: #ff3b30; /* Красный фон */
       color: #ffffff; /* Белый текст */
     }
 
     /* Вводы */
     .form-control {
-      background-color: #3a3a5a; /* Темно-серый фон для полей ввода */
-      border: 1px solid #5a5a7a; /* Средне-серая граница */
-      color: #e0e0f0; /* Цвет текста */
+      background-color: #2d2d2d; /* Тёмный фон */
+      border: 1px solid #3a3a3a; /* Тёмная граница */
+      color: #ffffff; /* Белый текст */
     }
     .form-control:focus {
-      background-color: #3a3a5a;
-      border-color: #86b7fe; /* Светло-синяя граница при фокусе */
+      background-color: #2d2d2d;
+      border-color: #85c1ff; /* Голубая граница при фокусе */
       color: #ffffff;
-      box-shadow: 0 0 0 0.2rem rgba(134, 183, 254, 0.25); /* Светло-синяя тень */
+      box-shadow: 0 0 0 0.2rem rgba(133, 193, 255, 0.25); /* Голубая тень */
     }
 
     /* Заголовки */
     h1, h2, h3, h4, h5 {
-      color: #b0b0f0; /* Светло-фиолетовый для заголовков */
+      color: #ffffff; /* Белый */
     }
   </style>
 </head>
