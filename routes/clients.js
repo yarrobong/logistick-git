@@ -47,7 +47,13 @@ router.get('/:id', async (req, res) => {
       req.flash('error', 'Клиент не найден.');
       return res.redirect('/clients');
     }
-    res.render('client-detail', { client });
+
+    res.render('client-detail', {
+      client,
+      STATUS_CONFIG: res.locals.STATUS_CONFIG,
+      messages: res.locals.messages,
+      session: req.session
+    });
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке деталей клиента.');
