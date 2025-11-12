@@ -89,12 +89,15 @@
                 </div>
             </div>
             <button type="submit" class="btn btn-primary"><%= order ? 'Обновить Заказ' : 'Создать Заказ' %></button>
+            </form> <!-- ЗАКРЫВАЕМ основную форму #orderForm ТУТ -->
+
             <% if (order) { %>
                 <a href="/orders" class="btn btn-secondary">Назад к списку</a>
-        <form action="/orders/<%= order.id %>" method="POST" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите УДАЛИТЬ этот заказ?')">
-            <input type="hidden" name="_method" value="DELETE">
-            <button type="submit" class="btn btn-outline-danger">Удалить заказ</button>
-        </form>
+                <!-- Форма удаления ТЕПЕРЬ ВНЕ основной формы -->
+                <form action="/orders/<%= order.id %>" method="POST" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите УДАЛИТЬ этот заказ?')">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="submit" class="btn btn-outline-danger">Удалить заказ</button>
+                </form>
             <% } %>
         
 
@@ -103,6 +106,9 @@
             <hr class="my-4">
             <h2>Товары в заказе</h2>
 
+            <!-- Форма добавления товара ТЕПЕРЬ ТОЖЕ ВНЕ основной формы #orderForm -->
+            <!-- ВНИМАНИЕ: Это означает, что она не будет отправлять данные основной формы при добавлении товара. -->
+            <!-- Это, скорее всего, правильное поведение, так как добавление товара - это отдельное действие. -->
             <form id="addItemForm" action="/orders/<%= order.id %>/items" method="POST">
                 <div class="row">
                     <div class="col-md-4">
