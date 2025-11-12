@@ -17,7 +17,7 @@ function renderClientDetail(res, view, data) {
       success: res.locals.messages?.success || []
     },
     session: res.locals.session || {},
-    filename: path.join(__dirname, `../views/${view}.ejs`) // важно для include
+    //filename: path.join(__dirname, `../views/${view}.ejs`) // важно для include
   });
 }
 
