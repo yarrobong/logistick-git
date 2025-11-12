@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
 // GET /orders/new - отобразить форму для создания нового заказа
 router.get('/new', async (req, res) => {
   try {
-    const clients = await Client.findAll(); // Получаем список клиентов для выпадающего списка
+    const clients = await Client.findAll();
     res.render('order-detail', { order: null, clients, isEditing: false });
   } catch (err) {
     console.error(err);
@@ -35,53 +35,35 @@ router.post('/', async (req, res) => {
           intermediaryChinaMoscow, trackingNumberChinaMoscow,
           intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
 
-  console.log('DEBUG POST /: req.body.orderDate =', orderDate, 'Type:', typeof orderDate);
-
-  // Проверяем, что имя клиента введено
-  if (!clientName) {
-    req.flash('error', 'Имя клиента обязательно.');
-    return res.redirect('/orders/new');
-  }
-
-  if (!orderDate) {
-    req.flash('error', 'Дата заказа обязательна.');
-    return res.redirect('/orders/new');
+  if (!clientName || !orderDate) {
+    req.flash('error', !clientName ? 'Имя клиента обязательно.' : 'Дата заказа обязательна.');
+    return res.redirect(!clientName ? '/orders/new' : '/orders/new');
   }
 
   try {
     let clientId = null;
-
-    // Если clientId передан скрытым полем (редактирование), используем его
     if (req.body.clientId) {
         clientId = parseInt(req.body.clientId, 10);
-        // Обновим данные клиента, если они изменились
         const existingClient = await Client.findById(clientId);
-        if (existingClient) {
-            if (existingClient.name !== clientName || existingClient.phone !== clientPhone) {
-                await Client.update(clientId, clientName, clientPhone, existingClient.address); // address оставляем как есть или можно добавить в форму
-            }
+        if (existingClient && (existingClient.name !== clientName || existingClient.phone !== clientPhone)) {
+            await Client.update(clientId, clientName, clientPhone, existingClient.address);
         }
     } else {
-        // Если clientId не передан, ищем существующего клиента по имени и телефону
         let client = await Client.findByPhoneAndName(clientPhone, clientName);
-
         if (!client) {
-            // Если не найден, создаем нового
-            const newClient = await Client.create(clientName, clientPhone, null); // address пока null
+            const newClient = await Client.create(clientName, clientPhone, null);
             clientId = newClient.id;
         } else {
-            // Если найден, используем его ID
             clientId = client.id;
         }
     }
 
-    // Используем два новых поля для стоимости доставки
     const orderId = await Order.create(clientId, destinationCity, status, orderDate,
                                       shippingCostChinaMoscow, shippingCostMoscowDestination,
                                       intermediaryChinaMoscow, trackingNumberChinaMoscow,
                                       intermediaryMoscowDestination, trackingNumberMoscowDestination);
     req.flash('success', 'Заказ успешно создан.');
-    res.redirect(`/orders/${orderId}`); // Перенаправляем на страницу деталей нового заказа
+    res.redirect(`/orders/${orderId}`);
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при создании заказа.');
@@ -92,7 +74,6 @@ router.post('/', async (req, res) => {
 // GET /orders/:id - отобразить детали конкретного заказа
 router.get('/:id', async (req, res) => {
   const orderId = parseInt(req.params.id, 10);
-
   if (isNaN(orderId)) {
     req.flash('error', 'Неверный ID заказа.');
     return res.redirect('/orders');
@@ -104,8 +85,7 @@ router.get('/:id', async (req, res) => {
       req.flash('error', 'Заказ не найден.');
       return res.redirect('/orders');
     }
-    const clients = await Client.findAll(); // Получаем список клиентов для выпадающего списка при редактировании
-
+    const clients = await Client.findAll();
     res.render('order-detail', { order, clients, isEditing: true });
   } catch (err) {
     console.error(err);
@@ -115,31 +95,25 @@ router.get('/:id', async (req, res) => {
 });
 
 // DELETE /orders/:id - удалить заказ
-// ПЕРЕМЕЩЁН ВЫШЕ, чтобы избежать конфликта с router.post('/:id')
 router.delete('/:id', async (req, res) => {
-    console.log("DEBUG DELETE /:id"); // <-- Лог для проверки вызова DELETE
   const orderId = parseInt(req.params.id, 10);
-
   if (isNaN(orderId)) {
     req.flash('error', 'Неверный ID заказа.');
     return res.status(400).send('Bad Request');
   }
 
   try {
-    await Order.delete(orderId); // Вызываем метод delete из модели
+    await Order.delete(orderId);
     req.flash('success', 'Заказ успешно удален.');
-    // Важно: выполнить только ОДИН ответ
-    res.redirect('/orders'); // Перенаправляем на список после удаления
+    res.redirect('/orders');
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при удалении заказа.');
-    res.redirect('/orders'); // Перенаправляем обратно со flash-сообщением об ошибке
+    res.redirect('/orders');
   }
-  // Удаляем строку res.redirect('/orders'); за пределами catch
 });
 
 // PUT /orders/:id - обновить заказ (используем POST с _method=PUT)
-// ПЕРЕМЕЩЁН НИЖЕ, чтобы избежать конфликта с router.delete('/:id')
 router.post('/:id', async (req, res) => {
   const orderId = parseInt(req.params.id, 10);
   const { clientName, clientPhone, destinationCity, status, orderDate,
@@ -147,52 +121,29 @@ router.post('/:id', async (req, res) => {
           intermediaryChinaMoscow, trackingNumberChinaMoscow,
           intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
 
-  console.log('DEBUG PUT /:id: req.body.orderDate =', orderDate, 'Type:', typeof orderDate);
-
-  if (isNaN(orderId)) {
-    req.flash('error', 'Неверный ID заказа.');
-    return res.redirect('/orders');
-  }
-
-  // Проверяем, что имя клиента введено
-  if (!clientName) {
-    req.flash('error', 'Имя клиента обязательно.');
+  if (isNaN(orderId) || !clientName || !orderDate) {
+    req.flash('error', !clientName ? 'Имя клиента обязательно.' : 'Дата заказа обязательна.');
     return res.redirect(`/orders/${orderId}`);
-  }
-
-  if (!orderDate) {
-      req.flash('error', 'Дата заказа обязательна.');
-      return res.redirect(`/orders/${orderId}`);
   }
 
   try {
     let clientId = null;
-
-    // Если clientId передан скрытым полем (редактирование), используем его
     if (req.body.clientId) {
         clientId = parseInt(req.body.clientId, 10);
-        // Обновим данные клиента, если они изменились
         const existingClient = await Client.findById(clientId);
-        if (existingClient) {
-            if (existingClient.name !== clientName || existingClient.phone !== clientPhone) {
-                await Client.update(clientId, clientName, clientPhone, existingClient.address); // address оставляем как есть или можно добавить в форму
-            }
+        if (existingClient && (existingClient.name !== clientName || existingClient.phone !== clientPhone)) {
+            await Client.update(clientId, clientName, clientPhone, existingClient.address);
         }
     } else {
-        // Если clientId не передан, ищем существующего клиента по имени и телефону
         let client = await Client.findByPhoneAndName(clientPhone, clientName);
-
         if (!client) {
-            // Если не найден, создаем нового
-            const newClient = await Client.create(clientName, clientPhone, null); // address пока null
+            const newClient = await Client.create(clientName, clientPhone, null);
             clientId = newClient.id;
         } else {
-            // Если найден, используем его ID
             clientId = client.id;
         }
     }
 
-    // Используем два новых поля для стоимости доставки
     await Order.update(orderId, clientId, destinationCity, status, orderDate,
                        shippingCostChinaMoscow, shippingCostMoscowDestination,
                        intermediaryChinaMoscow, trackingNumberChinaMoscow,
@@ -209,7 +160,6 @@ router.post('/:id', async (req, res) => {
 // POST /orders/:id/archive - архивировать заказ
 router.post('/:id/archive', async (req, res) => {
   const orderId = parseInt(req.params.id, 10);
-
   if (isNaN(orderId)) {
     req.flash('error', 'Неверный ID заказа.');
     return res.redirect('/orders');
@@ -226,68 +176,47 @@ router.post('/:id/archive', async (req, res) => {
   }
 });
 
-// POST /orders/:orderId/items - добавить товар в заказ
-
-// НОВЫЙ маршрут: Обновление отдельных полей товара (inline-редактирование)
+// --- НОВЫЙ МАРШРУТ: Inline-редактирование товара ---
 router.post('/:orderId/items/:itemId', async (req, res) => {
   const orderId = parseInt(req.params.orderId, 10);
   const itemId = parseInt(req.params.itemId, 10);
   const { quantity, price, product_name, received_quantity } = req.body;
 
-  // Проверка на валидность ID
   if (isNaN(orderId) || isNaN(itemId)) {
     return res.status(400).json({ error: 'Invalid order ID or item ID' });
   }
 
-  // Если пришли только отдельные поля (например, при inline-редактировании)
+  // Проверяем, является ли это inline-обновлением (т.е. пришли только отдельные поля)
   if (quantity !== undefined || price !== undefined || product_name !== undefined || received_quantity !== undefined) {
     try {
       const updates = {};
       if (quantity !== undefined) {
         const q = parseFloat(quantity);
-        if (isNaN(q) || q < 1) {
-          return res.status(400).json({ error: 'Invalid quantity' });
-        }
+        if (isNaN(q) || q < 1) return res.status(400).json({ error: 'Invalid quantity' });
         updates.quantity = q;
       }
       if (price !== undefined) {
         const p = parseFloat(price);
-        if (isNaN(p) || p < 0) {
-          return res.status(400).json({ error: 'Invalid price' });
-        }
+        if (isNaN(p) || p < 0) return res.status(400).json({ error: 'Invalid price' });
         updates.price = p;
       }
       if (product_name !== undefined) {
-        if (!product_name || product_name.trim() === '') {
-          return res.status(400).json({ error: 'Product name cannot be empty' });
-        }
+        if (!product_name || product_name.trim() === '') return res.status(400).json({ error: 'Product name cannot be empty' });
         updates.product_name = product_name.trim();
       }
       if (received_quantity !== undefined) {
         const rec = parseInt(received_quantity);
-        if (isNaN(rec) || rec < 0) {
-          return res.status(400).json({ error: 'Invalid received quantity' });
-        }
-        // Получим текущее количество товара
+        if (isNaN(rec) || rec < 0) return res.status(400).json({ error: 'Invalid received quantity' });
         const itemResult = await db.query('SELECT quantity FROM order_items WHERE id = $1', [itemId]);
         const item = itemResult.rows[0];
-        if (item && rec > item.quantity) {
-          return res.status(400).json({ error: 'Received quantity cannot exceed total quantity' });
-        }
+        if (item && rec > item.quantity) return res.status(400).json({ error: 'Received quantity cannot exceed total quantity' });
         updates.received_quantity = rec;
       }
 
       if (Object.keys(updates).length > 0) {
-        // Сначала обновляем поля
         await Order.updateItemFields(itemId, updates);
-
-        // ЗАТЕМ получаем обновленный товар
         const updatedItem = await Order.getItemById(itemId);
-
-        // И пересчитываем общую сумму заказа
         const totalResult = await Order.getTotalAmount(orderId);
-
-        // Возвращаем обновленный товар и общую сумму
         return res.json({ success: true, item: updatedItem, totalAmount: totalResult });
       } else {
         return res.status(400).json({ error: 'No valid fields to update' });
@@ -298,29 +227,30 @@ router.post('/:orderId/items/:itemId', async (req, res) => {
     }
   }
 
-  return res.status(400).json({ error: 'This endpoint is for inline updates only' });
+  // Если это не inline-обновление, значит, это старый маршрут PUT через POST с _method
+  // Но мы его больше не используем, т.к. inline-редактирование покрывает все случаи
+  // или, если вы всё-таки хотите поддерживать _method=PUT, добавьте проверку:
+  if (req.body._method === 'PUT') {
+    // Логика старого PUT-маршрута
+    const { productName, quantity, price } = req.body;
+    if (isNaN(orderId) || isNaN(itemId)) {
+      req.flash('error', 'Неверный ID заказа или товара.');
+      return res.redirect(`/orders/${orderId}`);
+    }
+    try {
+      await Order.updateItem(itemId, productName, parseInt(quantity, 10), parseFloat(price));
+      req.flash('success', 'Товар успешно обновлен.');
+      res.redirect(`/orders/${orderId}`);
+    } catch (err) {
+      console.error(err);
+      req.flash('error', 'Ошибка при обновлении товара.');
+      res.redirect(`/orders/${orderId}`);
+    }
+  } else {
+    return res.status(400).json({ error: 'This endpoint is for inline updates or PUT with _method only' });
+  }
 });
 
-// DELETE /orders/:orderId/items/:itemId - удалить товар из заказа
-router.delete('/:orderId/items/:itemId', async (req, res) => {
-  const orderId = parseInt(req.params.orderId, 10);
-  const itemId = parseInt(req.params.itemId, 10);
-
-  if (isNaN(orderId) || isNaN(itemId)) {
-    req.flash('error', 'Неверный ID заказа или товара.');
-    return res.status(400).send('Bad Request');
-  }
-
-  try {
-    await Order.deleteItem(itemId);
-    req.flash('success', 'Товар успешно удален.');
-    res.status(200).send('OK');
-  } catch (err) {
-    console.error(err);
-    req.flash('error', 'Ошибка при удалении товара.');
-    res.status(500).send('Internal Server Error');
-  }
-});
 // POST /orders/:orderId/items - добавить товар в заказ
 router.post('/:orderId/items', async (req, res) => {
   const orderId = parseInt(req.params.orderId, 10);
@@ -359,4 +289,26 @@ router.post('/:orderId/items', async (req, res) => {
     res.redirect(`/orders/${orderId}`);
   }
 });
+
+// DELETE /orders/:orderId/items/:itemId - удалить товар из заказа
+router.delete('/:orderId/items/:itemId', async (req, res) => {
+  const orderId = parseInt(req.params.orderId, 10);
+  const itemId = parseInt(req.params.itemId, 10);
+
+  if (isNaN(orderId) || isNaN(itemId)) {
+    req.flash('error', 'Неверный ID заказа или товара.');
+    return res.status(400).send('Bad Request');
+  }
+
+  try {
+    await Order.deleteItem(itemId);
+    req.flash('success', 'Товар успешно удален.');
+    res.status(200).send('OK');
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Ошибка при удалении товара.');
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 module.exports = router;
