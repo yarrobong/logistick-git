@@ -106,149 +106,156 @@
   </div>
 
   <script>
-    // УДАЛЕНО: async function addItem(orderId) { ... }
+  document.addEventListener("DOMContentLoaded", () => {
+    const orderId = <%= order ? order.id : 'null' %>;
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const orderId = <%= order ? order.id : 'null' %>;
+    // Удаление заказа
+    const delOrderBtn = document.getElementById('deleteOrderBtn');
+    if (delOrderBtn) {
+      delOrderBtn.onclick = async () => {
+        if (!confirm("Удалить заказ?")) return;
+        const res = await fetch(`/orders/${orderId}?_method=DELETE`, { method: "POST" });
+        if (res.ok) location.href = "/orders";
+        else alert("Ошибка удаления");
+      };
+    }
 
-      // Удаление заказа
-      const delOrderBtn = document.getElementById('deleteOrderBtn');
-      if (delOrderBtn) {
-        delOrderBtn.onclick = async () => {
-          if (!confirm("Удалить заказ?")) return;
-          const res = await fetch(`/orders/${orderId}?_method=DELETE`, { method: "POST" });
-          if (res.ok) location.href = "/orders";
-          else alert("Ошибка удаления");
-        };
-      }
+    // Inline редактирование
+    document.body.addEventListener("click", e => {
+      if (!e.target.classList.contains("editable-field")) return;
+      const span = e.target;
+      const field = span.dataset.field;
+      const parent = span.closest("[data-id]");
+      const itemId = parent.dataset.id;
+      const input = document.createElement("input");
+      input.type = (field === "quantity" || field === "price") ? "number" : "text";
+      input.step = (field === "quantity" || field === "price") ? "0.01" : undefined;
+      input.min = (field === "quantity") ? "1" : (field === "price") ? "0" : undefined;
+      input.value = span.textContent.trim();
+      input.className = "form-control form-control-sm d-inline w-auto";
+      span.replaceWith(input);
+      input.focus();
 
-      // Inline редактирование
-      document.body.addEventListener("click", e => {
-        if (!e.target.classList.contains("editable-field")) return;
-        const span = e.target;
-        const field = span.dataset.field;
-        const parent = span.closest("[data-id]");
-        const itemId = parent.dataset.id;
-        const input = document.createElement("input");
-        input.type = (field === "quantity" || field === "price") ? "number" : "text";
-        input.value = span.textContent.trim();
-        input.className = "form-control form-control-sm d-inline w-auto";
-        span.replaceWith(input);
-        input.focus();
-
-        // ИСПРАВЛЕНО: обновление item_total на клиенте при изменении quantity или price
-        input.addEventListener("blur", async () => {
-          const newValue = input.value.trim();
-          const response = await updateItem(itemId, field, newValue); // <-- Обновите функцию, чтобы она возвращала ответ
-          if(response && response.success) { // <-- Проверяем успешность
-            span.textContent = newValue;
-            // Обновляем item_total на странице, если обновляли quantity или price
-            if(field === 'quantity' || field === 'price') {
-                // Получаем текущие значения из DOM или из ответа сервера
-                // Используем ответ сервера, если он содержит обновленный элемент
-                if(response.item) {
-                    // Если сервер возвращает обновленный item, используем его данные
-                    const serverUpdatedTotal = parseFloat(response.item.item_total).toFixed(2);
-                    span.closest("[data-id]").querySelector('.item-total').textContent = serverUpdatedTotal;
-                } else {
-                    // Альтернатива: вычисляем на клиенте (менее надёжно, если логика на сервере сложнее)
-                    const qtySpan = span.closest("[data-id]").querySelector('[data-field="quantity"]');
-                    const priceSpan = span.closest("[data-id]").querySelector('[data-field="price"]');
-                    // Используем обновлённое значение, если это поле, или старое значение из DOM
-                    const currentQty = field === 'quantity' ? newValue : (qtySpan.textContent || 1);
-                    const currentPrice = field === 'price' ? newValue : (priceSpan.textContent || 0);
-                    const total = parseFloat(currentQty) * parseFloat(currentPrice);
-                    span.closest("[data-id]").querySelector('.item-total').textContent = total.toFixed(2);
-                }
-            }
-            updateTotals(); // <-- Обновляем общую сумму
-          } else {
-             alert("Ошибка обновления");
-          }
+      input.addEventListener("blur", async () => {
+        const newValue = input.value.trim();
+        const response = await updateItem(itemId, field, newValue);
+        if(response && response.success) {
+          // --- ОБНОВЛЕНИЕ DOM ---
+          // 1. Обновляем текстовое содержимое поля
+          span.textContent = newValue;
+          // 2. Возвращаем span на место
           input.replaceWith(span);
-        });
 
-        input.addEventListener("keydown", ev => {
-          if (ev.key === "Enter") input.blur();
-        });
-      });
+          // 3. Обновляем item_total, если редактировали quantity или price
+          if(field === 'quantity' || field === 'price') {
+            // Используем данные из обновлённого элемента, если сервер их вернул
+            if(response.item) {
+              const serverUpdatedTotal = parseFloat(response.item.item_total).toFixed(2);
+              parent.querySelector('.item-total').textContent = serverUpdatedTotal;
+            } else {
+              // Альтернатива: вычисляем на клиенте
+              const qtySpan = parent.querySelector('[data-field="quantity"]');
+              const priceSpan = parent.querySelector('[data-field="price"]');
+              const currentQty = field === 'quantity' ? newValue : (qtySpan.textContent || 1);
+              const currentPrice = field === 'price' ? newValue : (priceSpan.textContent || 0);
+              const total = parseFloat(currentQty) * parseFloat(currentPrice);
+              parent.querySelector('.item-total').textContent = total.toFixed(2);
+            }
+          }
 
-      // Добавление товара
-      const addBtn = document.getElementById("addItemBtn");
-      if (addBtn) {
-         addBtn.onclick = () => {
-           const name = prompt("Название товара:");
-           if (!name) return;
-           const qty = parseInt(prompt("Количество:", "1")) || 1;
-           const price = parseFloat(prompt("Цена:", "0")) || 0;
-
-           // Проверки на числа можно улучшить, но для простоты оставим так
-           if (isNaN(qty) || qty <= 0) {
-             alert("Количество должно быть положительным числом.");
-             return;
-           }
-           if (isNaN(price) || price < 0) {
-             alert("Цена должна быть неотрицательным числом.");
-             return;
-           }
-
-           fetch(`/orders/${orderId}/items`, {
-             method: "POST",
-             headers: { "Content-Type": "application/json" },
-             body: JSON.stringify({ product_name: name, quantity: qty, price: price })
-           })
-           .then(response => {
-             if(response.ok) {
-               location.reload(); // Перезагружаем для отображения нового товара и обновления итога
-             } else {
-               alert("Ошибка при добавлении товара");
-             }
-           })
-           .catch(error => {
-             console.error('Error:', error);
-             alert("Ошибка при добавлении товара");
-           });
-         };
-      }
-
-      // Удаление товара
-      document.body.addEventListener("click", async e => {
-        if (!e.target.classList.contains("delete-item")) return;
-        const card = e.target.closest("[data-id]");
-        const itemId = card.dataset.id;
-        if (!confirm("Удалить позицию?")) return;
-        const res = await fetch(`/orders/${orderId}/items/${itemId}?_method=DELETE`, { method: "POST" });
-        if (res.ok) {
-          card.remove();
-          updateTotals(); // Обновляем итог после удаления
+          // 4. Обновляем общую сумму заказа
+          if(response.totalAmount !== undefined) {
+            document.getElementById('totalAmountDisplay').textContent = parseFloat(response.totalAmount).toFixed(2);
+          } else {
+            // Если сервер не вернул totalAmount, пересчитываем на клиенте
+            updateTotals();
+          }
         } else {
-          alert("Ошибка удаления");
+           alert("Ошибка обновления");
+           input.replaceWith(span); // Возвращаем старое значение при ошибке
         }
       });
 
-      async function updateItem(id, field, value) {
-        try {
-          const res = await fetch(`/orders/${orderId}/items/${id}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ [field]: value })
-          });
-          if (!res.ok) throw new Error("Ошибка HTTP");
-          const response = await res.json();
-          return response; // Возвращаем ответ сервера
-        } catch (e) {
-          alert("Ошибка обновления товара");
-          console.error(e);
-          return null;
-        }
-      }
+      input.addEventListener("keydown", ev => {
+        if (ev.key === "Enter") input.blur();
+      });
+    });
 
-      function updateTotals() {
-        const totals = [...document.querySelectorAll(".item-total")];
-        const sum = totals.reduce((acc, t) => acc + (+t.textContent || 0), 0);
-        document.getElementById('totalAmountDisplay').textContent = sum.toFixed(2);
+    // Добавление товара
+    const addBtn = document.getElementById("addItemBtn");
+    if (addBtn) {
+       addBtn.onclick = () => {
+         const name = prompt("Название товара:");
+         if (!name) return;
+         const qty = parseInt(prompt("Количество:", "1")) || 1;
+         const price = parseFloat(prompt("Цена:", "0")) || 0;
+
+         if (isNaN(qty) || qty <= 0) {
+           alert("Количество должно быть положительным числом.");
+           return;
+         }
+         if (isNaN(price) || price < 0) {
+           alert("Цена должна быть неотрицательным числом.");
+           return;
+         }
+
+         fetch(`/orders/${orderId}/items`, {
+           method: "POST",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify({ product_name: name, quantity: qty, price: price })
+         })
+         .then(response => {
+           if(response.ok) {
+             location.reload(); // Перезагружаем для отображения нового товара и обновления итога
+           } else {
+             alert("Ошибка при добавлении товара");
+           }
+         })
+         .catch(error => {
+           console.error('Error:', error);
+           alert("Ошибка при добавлении товара");
+         });
+       };
+    }
+
+    // Удаление товара
+    document.body.addEventListener("click", async e => {
+      if (!e.target.classList.contains("delete-item")) return;
+      const card = e.target.closest("[data-id]");
+      const itemId = card.dataset.id;
+      if (!confirm("Удалить позицию?")) return;
+      const res = await fetch(`/orders/${orderId}/items/${itemId}?_method=DELETE`, { method: "POST" });
+      if (res.ok) {
+        card.remove();
+        updateTotals(); // Обновляем итог после удаления
+      } else {
+        alert("Ошибка удаления");
       }
     });
+
+    async function updateItem(id, field, value) {
+      try {
+        const res = await fetch(`/orders/${orderId}/items/${id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ [field]: value })
+        });
+        if (!res.ok) throw new Error("Ошибка HTTP");
+        const response = await res.json();
+        return response; // Возвращаем ответ сервера
+      } catch (e) {
+        alert("Ошибка обновления товара");
+        console.error(e);
+        return null;
+      }
+    }
+
+    function updateTotals() {
+      const totals = [...document.querySelectorAll(".item-total")];
+      const sum = totals.reduce((acc, t) => acc + (+t.textContent || 0), 0);
+      document.getElementById('totalAmountDisplay').textContent = sum.toFixed(2);
+    }
+  });
 </script>
 </body>
 </html>
