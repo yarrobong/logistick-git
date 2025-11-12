@@ -71,25 +71,7 @@ const Order = {
        intermediaryMoscowDestination, trackingNumberMoscowDestination, id] // 9, 10, 11
     );
   },
-  updateItemFields: async (itemId, updates) => {
-    const fields = Object.keys(updates);
-    if (fields.length === 0) return;
-
-    const setClause = fields.map((field, index) => `${field} = $${index + 1}`).join(', ');
-    const values = Object.values(updates);
-    values.push(itemId); // Добавляем ID в конец для WHERE
-
-    const query = `UPDATE order_items SET ${setClause} WHERE id = $${fields.length + 1}`;
-    await db.query(query, values);
-
-    // Пересчитываем item_total
-    const itemResult = await db.query('SELECT quantity, price FROM order_items WHERE id = $1', [itemId]);
-    const item = itemResult.rows[0];
-    if (item) {
-        const itemTotal = item.quantity * item.price;
-        await db.query('UPDATE order_items SET item_total = $1 WHERE id = $2', [itemTotal, itemId]);
-    }
-},
+  
 
 // Получить товар по ID
 getItemById: async (id) => {
@@ -166,11 +148,60 @@ getItemById: async (id) => {
   if (total > limit) {
     total = limit;
     console.warn(`⚠️ Total for order ${orderId} exceeded DB limit, capped to ${limit}`);
-  }
-
-  // Обновляем итоговую сумму заказа
-  await db.query('UPDATE orders SET total_amount = $1 WHERE id = $2', [total, orderId]);
+  };
 }
+// В файле models/Order.js, внутри объекта Order, добавьте:
+  updateItemFields: async (itemId, updates) => {
+    const fields = Object.keys(updates);
+    if (fields.length === 0) return;
+
+    const setClause = fields.map((field, index) => `${field} = $${index + 1}`).join(', ');
+    const values = Object.values(updates);
+    values.push(itemId); // Добавляем ID в конец для WHERE
+
+    const query = `UPDATE order_items SET ${setClause} WHERE id = $${fields.length + 1}`;
+    await db.query(query, values);
+
+    // ПЕРЕСЧИТЫВАЕМ item_total ПОСЛЕ ОБНОВЛЕНИЯ quantity ИЛИ price
+    const itemResult = await db.query('SELECT quantity, price FROM order_items WHERE id = $1', [itemId]);
+    const item = itemResult.rows[0];
+    if (item) {
+        const itemTotal = item.quantity * item.price;
+        await db.query('UPDATE order_items SET item_total = $1 WHERE id = $2', [itemTotal, itemId]);
+        // Теперь пересчитываем total_amount для всего заказа
+        const orderItemResult = await db.query('SELECT order_id FROM order_items WHERE id = $1', [itemId]);
+        const orderId = orderItemResult.rows[0]?.order_id;
+        if (orderId) {
+             await Order.calculateTotalAmount(orderId);
+        }
+    }
+},
+
+  // Также добавьте метод getTotalAmount, который вы используете в routes/orders.js:
+  getTotalAmount: async (orderId) => {
+    const result = await db.query('SELECT total_amount FROM orders WHERE id = $1', [orderId]);
+    return parseFloat(result.rows[0]?.total_amount || 0);
+  },
+
+  // ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ ПЕРЕСЧЁТА total_amount заказа
+  calculateTotalAmount: async (orderId) => {
+    const totalResult = await db.query(`
+      SELECT COALESCE(SUM(item_total), 0) AS total
+      FROM order_items
+      WHERE order_id = $1
+    `, [orderId]);
+
+    let total = parseFloat(totalResult.rows[0].total || 0);
+
+    const limit = 9999999999999.99;
+    if (total > limit) {
+      total = limit;
+      console.warn(`⚠️ Total for order ${orderId} exceeded DB limit, capped to ${limit}`);
+    }
+
+    await db.query('UPDATE orders SET total_amount = $1 WHERE id = $2', [total, orderId]);
+  },
+};
 };
 
 module.exports = Order;

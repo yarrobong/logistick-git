@@ -227,47 +227,12 @@ router.post('/:id/archive', async (req, res) => {
 });
 
 // POST /orders/:orderId/items - добавить товар в заказ
-router.post('/:orderId/items', async (req, res) => {
-  const orderId = parseInt(req.params.orderId, 10);
-  let { productName, name, quantity, price } = req.body;
-const finalProductName = productName || name;
-
-if (!finalProductName || finalProductName.trim() === '') {
-  req.flash('error', 'Название товара обязательно.');
-  return res.redirect(`/orders/${orderId}`);
-}
-
-try {
-  await Order.addItem(orderId, finalProductName.trim(), parseInt(quantity, 10), parseFloat(price));
-  req.flash('success', 'Товар успешно добавлен.');
-  res.redirect(`/orders/${orderId}`);
-} catch (err) {
-  console.error(err);
-  req.flash('error', 'Ошибка при добавлении товара.');
-  res.redirect(`/orders/${orderId}`);
-}
-
-  if (isNaN(orderId)) {
-    req.flash('error', 'Неверный ID заказа.');
-    return res.redirect(`/orders/${orderId}`);
-  }
-
-  try {
-    await Order.addItem(orderId, productName, parseInt(quantity, 10), parseFloat(price));
-    req.flash('success', 'Товар успешно добавлен.');
-    res.redirect(`/orders/${orderId}`);
-  } catch (err) {
-    console.error(err);
-    req.flash('error', 'Ошибка при добавлении товара.');
-    res.redirect(`/orders/${orderId}`);
-  }
-});
 
 // НОВЫЙ маршрут: Обновление отдельных полей товара (inline-редактирование)
 router.post('/:orderId/items/:itemId', async (req, res) => {
   const orderId = parseInt(req.params.orderId, 10);
   const itemId = parseInt(req.params.itemId, 10);
-  const { quantity, price, product_name, received_quantity } = req.body; // Добавлено received_quantity
+  const { quantity, price, product_name, received_quantity } = req.body;
 
   // Проверка на валидность ID
   if (isNaN(orderId) || isNaN(itemId)) {
@@ -313,12 +278,17 @@ router.post('/:orderId/items/:itemId', async (req, res) => {
       }
 
       if (Object.keys(updates).length > 0) {
+        // Сначала обновляем поля
         await Order.updateItemFields(itemId, updates);
-        // Пересчитаем total_amount для заказа
-        await Order.calculateTotalAmount(orderId);
-        // Получим обновленный товар для возврата
+
+        // ЗАТЕМ получаем обновленный товар
         const updatedItem = await Order.getItemById(itemId);
-        return res.json({ success: true, item: updatedItem });
+
+        // И пересчитываем общую сумму заказа
+        const totalResult = await Order.getTotalAmount(orderId);
+
+        // Возвращаем обновленный товар и общую сумму
+        return res.json({ success: true, item: updatedItem, totalAmount: totalResult });
       } else {
         return res.status(400).json({ error: 'No valid fields to update' });
       }
@@ -328,9 +298,6 @@ router.post('/:orderId/items/:itemId', async (req, res) => {
     }
   }
 
-  // Если это не inline-обновление, передаём управление дальше (например, старому PUT маршруту)
-  // Но т.к. у нас есть отдельный маршрут для PUT (см. ниже), этот фрагмент не нужен.
-  // Просто вернём 400, если это не inline-обновление
   return res.status(400).json({ error: 'This endpoint is for inline updates only' });
 });
 
@@ -354,5 +321,42 @@ router.delete('/:orderId/items/:itemId', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+// POST /orders/:orderId/items - добавить товар в заказ
+router.post('/:orderId/items', async (req, res) => {
+  const orderId = parseInt(req.params.orderId, 10);
+  const { product_name, quantity, price } = req.body;
 
+  if (isNaN(orderId)) {
+    req.flash('error', 'Неверный ID заказа.');
+    return res.redirect('/orders');
+  }
+
+  if (!product_name || product_name.trim() === '') {
+    req.flash('error', 'Название товара обязательно.');
+    return res.redirect(`/orders/${orderId}`);
+  }
+
+  const qty = parseInt(quantity, 10);
+  const pr = parseFloat(price);
+
+  if (isNaN(qty) || qty <= 0) {
+    req.flash('error', 'Некорректное количество.');
+    return res.redirect(`/orders/${orderId}`);
+  }
+
+  if (isNaN(pr) || pr < 0) {
+    req.flash('error', 'Некорректная цена.');
+    return res.redirect(`/orders/${orderId}`);
+  }
+
+  try {
+    await Order.addItem(orderId, product_name.trim(), qty, pr);
+    req.flash('success', 'Товар успешно добавлен.');
+    res.redirect(`/orders/${orderId}`);
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Ошибка при добавлении товара.');
+    res.redirect(`/orders/${orderId}`);
+  }
+});
 module.exports = router;
