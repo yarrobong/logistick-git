@@ -6,15 +6,159 @@
     <title>Клиент: <%= client.name %></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Темная тема как в Telegram */
+        body { 
+            background-color: #18222D; 
+            color: #ffffff; 
+        }
+
+        /* Стили для карточки клиента */
+        .client-card {
+            background-color: #213040; 
+            border-radius: .5rem;
+            padding: 1rem; 
+            margin-bottom: 1rem;
+        }
+
+        /* Стили для карточек заказов */
+        .order-card {
+            background-color: #213040; 
+            border-radius: .5rem;
+            transition: .2s;
+            color: white;
+            padding: 1rem; 
+        }
+        .order-card:hover { 
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); 
+            border-color: #3a3a3a; 
+        }
+
+        /* Кнопки */
+        .btn-outline-light {
+            border-color: #3a3a3a; 
+            color: #d0d0d0; 
+            background-color: transparent;
+        }
+        .btn-outline-light:hover {
+            background-color: #3a3a3a; 
+            color: #ffffff; 
+        }
+
+        .btn-success {
+            background-color: #0088cc; 
+            border-color: #0088cc;
+        }
+        .btn-success:hover {
+            background-color: #0077b3; 
+            border-color: #0077b3;
+        }
+
+        .btn-outline-danger {
+            color: #ff3b30; 
+            border-color: #ff3b30;
+        }
+        .btn-outline-danger:hover {
+            background-color: #ff3b30; 
+            color: #ffffff; 
+        }
+
+        /* Вводы */
+        .form-control {
+            background-color: #213040; 
+            border: none; 
+            color: #ffffff; 
+        }
+        .form-control:focus {
+            background-color: #213040;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.2rem rgba(133, 193, 255, 0.25); 
+        }
+
+        /* Заголовки */
+        h1, h2, h3, h4, h5 {
+            color: #ffffff; 
+        }
+
+        /* --- НОВЫЕ СТИЛИ ДЛЯ ЗАКАЗОВ --- */
+        .order-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            margin-top: 0.5rem; 
+        }
+
+        .order-details div {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        /* На мобильных устройствах */
+        @media (max-width: 768px) {
+            .order-details {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
+            }
+
+            .order-details div {
+                width: 100%; 
+                justify-content: flex-start; 
+                gap: 0.25rem; 
+            }
+
+            .order-details div::before {
+                content: attr(data-label) ": "; 
+                white-space: nowrap;
+            }
+
+            .order-actions {
+                opacity: 1; 
+                margin-top: 0.5rem; 
+                align-self: center; 
+            }
+        }
+
+        /* Для ширины экрана меньше 1000px */
+        @media (max-width: 1000px) {
+            .order-card .d-flex.justify-content-between {
+                flex-direction: column; 
+                gap: 0.5rem;
+            }
+
+            .order-card .flex-grow-1 div {
+                display: flex;
+                flex-direction: column; 
+                gap: 0.25rem;
+                width: 100%;
+            }
+
+            .order-card .flex-grow-1 div .order-info,
+            .order-card .flex-grow-1 div .order-stats {
+                width: 100%; 
+            }
+
+            .order-actions {
+                margin-top: 0.5rem;
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+    </style>
 </head>
-<body class="bg-dark text-light">
-    
+<body>
+    <%- include('partials/navbar') %>
     <div class="container mt-4">
         <h1>Клиент: <%= client.name %></h1>
-        <div class="row">
-            <div class="col-md-6">
-                <p><strong>Телефон:</strong> <%= client.phone || 'N/A' %></p>
-                <p><strong>Адрес:</strong> <%= client.address || 'N/A' %></p>
+
+        <div class="client-card">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Телефон:</strong> <%= client.phone || 'N/A' %></p>
+                    <p><strong>Адрес:</strong> <%= client.address || 'N/A' %></p>
+                </div>
             </div>
         </div>
 
@@ -23,44 +167,46 @@
         <h2>Заказы клиента</h2>
 
         <% if (client.orders && client.orders.length > 0) { %>
-            <div class="table-responsive">
-                <table class="table table-dark table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Дата</th>
-                            <th>Город</th>
-                            <th>Статус</th>
-                            <th>Сумма (с доставкой)</th>
-                            <th>Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% client.orders.forEach(order => { %>
-                            <tr>
-                                <td><a href="/orders/<%= order.id %>" class="text-decoration-none"><%= order.id %></a></td>
-                                <td><%= order.order_date ? new Date(order.order_date).toLocaleDateString('ru-RU') : 'N/A' %></td>
-                                <td><%= order.destination_city || 'N/A' %></td>
-                                                                <td>
-                                    <% const statusConfig = STATUS_CONFIG.ORDER_STATUSES.find(s => s.value === order.status); %>
-                                    <span class="badge bg-<%= statusConfig ? statusConfig.color : 'secondary' %>">
-                                        <%= order.status %>
-                                    </span>
-                                </td>
-                                <td><%= (parseFloat(order.total_with_shipping) || 0).toFixed(2) %></td>
-                                <td>
-                                    <a href="/orders/<%= order.id %>" class="btn btn-sm btn-outline-light">Детали</a>
-                                </td>
-                            </tr>
-                        <% }); %>
-                    </tbody>
-                </table>
+            <div class="row g-3"> <!-- Bootstrap grid -->
+                <% client.orders.forEach(order => { %>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card order-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title mb-0">
+                                        <a href="/orders/<%= order.id %>" class="text-decoration-none" style="color: #85c1ff;">Заказ #<%= order.id %></a>
+                                    </h5>
+                                    <div class="order-details mt-2">
+                                        <div data-label="Дата">
+                                            <span class="order-info"><%= order.order_date ? new Date(order.order_date).toLocaleDateString('ru-RU') : 'N/A' %></span>
+                                        </div>
+                                        <div data-label="Город">
+                                            <span class="order-info"><%= order.destination_city || 'N/A' %></span>
+                                        </div>
+                                        <div data-label="Сумма">
+                                            <span class="order-stats"><%= (parseFloat(order.total_with_shipping) || 0).toFixed(2) %></span>
+                                        </div>
+                                        <div>
+                                            <% const statusConfig = STATUS_CONFIG.ORDER_STATUSES.find(s => s.value === order.status); %>
+                                            <span class="badge bg-<%= statusConfig ? statusConfig.color : 'secondary' %>">
+                                                <%= order.status %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="order-actions">
+                                    <a href="/orders/<%= order.id %>" class="btn btn-outline-light btn-sm">Детали</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
             </div>
         <% } else { %>
             <p class="text-center">У этого клиента пока нет заказов.</p>
         <% } %>
 
-        <a href="/clients" class="btn btn-secondary">Назад к списку клиентов</a>
+        <a href="/clients" class="btn btn-secondary mt-3">Назад к списку клиентов</a>
 
         <!-- Flash сообщения -->
         <% if (messages.error.length > 0) { %>
