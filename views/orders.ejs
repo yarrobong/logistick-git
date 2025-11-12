@@ -51,10 +51,10 @@
                                     <form action="/orders/<%= order.id %>/archive" method="POST" class="d-inline">
                                         <button type="submit" class="btn btn-sm btn-outline-warning me-1" onclick="return confirm('Вы уверены, что хотите архивировать этот заказ?')">Архив</button>
                                     </form>
-                                    <form action="/orders/<%= order.id %>" method="POST" class="d-inline" onsubmit="return confirm('...')">
-    <input type="hidden" name="_method" value="DELETE">
-    <button type="submit" class="btn btn-outline-danger">Удалить заказ</button>
-</form>
+                                    <form action="/orders/<%= order.id %>" method="POST" class="d-inline">
+                                        <input type="hidden" name="_method" value="DELETE">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Вы уверены, что хотите УДАЛИТЬ этот заказ?')">Удалить</button>
+                                    </form>
                                 </td>
                             </tr>
                         <% }); %>

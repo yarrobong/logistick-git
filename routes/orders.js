@@ -294,6 +294,7 @@ router.delete('/:id', async (req, res) => {
     // Или редирект с ошибкой:
     // res.redirect('/orders'); // Раскомментируйте, если хотите редирект
   }
+  res.redirect('/orders');
 });
 
 
