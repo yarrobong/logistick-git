@@ -140,20 +140,14 @@
         const newValue = input.value.trim();
         const response = await updateItem(itemId, field, newValue);
         if(response && response.success) {
-          // --- ОБНОВЛЕНИЕ DOM ---
-          // 1. Обновляем текстовое содержимое поля
           span.textContent = newValue;
-          // 2. Возвращаем span на место
           input.replaceWith(span);
 
-          // 3. Обновляем item_total, если редактировали quantity или price
           if(field === 'quantity' || field === 'price') {
-            // Используем данные из обновлённого элемента, если сервер их вернул
             if(response.item) {
               const serverUpdatedTotal = parseFloat(response.item.item_total).toFixed(2);
               parent.querySelector('.item-total').textContent = serverUpdatedTotal;
             } else {
-              // Альтернатива: вычисляем на клиенте
               const qtySpan = parent.querySelector('[data-field="quantity"]');
               const priceSpan = parent.querySelector('[data-field="price"]');
               const currentQty = field === 'quantity' ? newValue : (qtySpan.textContent || 1);
@@ -163,16 +157,14 @@
             }
           }
 
-          // 4. Обновляем общую сумму заказа
           if(response.totalAmount !== undefined) {
             document.getElementById('totalAmountDisplay').textContent = parseFloat(response.totalAmount).toFixed(2);
           } else {
-            // Если сервер не вернул totalAmount, пересчитываем на клиенте
             updateTotals();
           }
         } else {
            alert("Ошибка обновления");
-           input.replaceWith(span); // Возвращаем старое значение при ошибке
+           input.replaceWith(span);
         }
       });
 
@@ -181,44 +173,107 @@
       });
     });
 
-    // Добавление товара
+    // --- НОВАЯ ЛОГИКА: Добавление товара через строку ---
     const addBtn = document.getElementById("addItemBtn");
     if (addBtn) {
        addBtn.onclick = () => {
-         const name = prompt("Название товара:");
-         if (!name) return;
-         const qty = parseInt(prompt("Количество:", "1")) || 1;
-         const price = parseFloat(prompt("Цена:", "0")) || 0;
+         // Создаём карточку с полями ввода
+         const newCard = document.createElement("div");
+         newCard.className = "card item-card p-3 mb-2";
+         newCard.innerHTML = `
+           <div class="d-flex justify-content-between align-items-start">
+             <div class="flex-grow-1">
+               <input type="text" class="form-control form-control-sm mb-2" placeholder="Название товара" data-field="product_name">
+               <div>
+                 Кол-во:
+                 <input type="number" class="form-control form-control-sm d-inline w-auto me-2" style="width: 80px;" placeholder="1" value="1" min="1" data-field="quantity">
+                 Цена:
+                 <input type="number" class="form-control form-control-sm d-inline w-auto me-2" style="width: 100px;" placeholder="0.00" value="0.00" step="0.01" min="0" data-field="price">
+                 Сумма: <span class="item-total">0.00</span>
+               </div>
+             </div>
+             <div class="item-actions">
+               <button class="btn btn-sm btn-success save-new-item">✓</button>
+               <button class="btn btn-sm btn-outline-danger cancel-new-item ms-1">×</button>
+             </div>
+           </div>
+         `;
+         // Вставляем карточку перед кнопкой "Добавить позицию"
+         addBtn.parentNode.insertBefore(newCard, addBtn);
 
-         if (isNaN(qty) || qty <= 0) {
-           alert("Количество должно быть положительным числом.");
-           return;
-         }
-         if (isNaN(price) || price < 0) {
-           alert("Цена должна быть неотрицательным числом.");
-           return;
-         }
+         // Находим элементы в новой карточке
+         const nameInput = newCard.querySelector('input[data-field="product_name"]');
+         const qtyInput = newCard.querySelector('input[data-field="quantity"]');
+         const priceInput = newCard.querySelector('input[data-field="price"]');
+         const totalSpan = newCard.querySelector('.item-total');
+         const saveBtn = newCard.querySelector('.save-new-item');
+         const cancelBtn = newCard.querySelector('.cancel-new-item');
 
-         fetch(`/orders/${orderId}/items`, {
-           method: "POST",
-           headers: { "Content-Type": "application/json" },
-           body: JSON.stringify({ product_name: name, quantity: qty, price: price })
-         })
-         .then(response => {
-           if(response.ok) {
-             location.reload(); // Перезагружаем для отображения нового товара и обновления итога
-           } else {
+         // Фокус на поле названия
+         nameInput.focus();
+
+         // Обновление суммы при изменении кол-ва или цены
+         const recalculateTotal = () => {
+           const qty = parseFloat(qtyInput.value) || 0;
+           const price = parseFloat(priceInput.value) || 0;
+           totalSpan.textContent = (qty * price).toFixed(2);
+         };
+         qtyInput.addEventListener('input', recalculateTotal);
+         priceInput.addEventListener('input', recalculateTotal);
+
+         // Кнопка сохранить
+         saveBtn.onclick = async () => {
+           const name = nameInput.value.trim();
+           const qty = parseInt(qtyInput.value, 10);
+           const price = parseFloat(priceInput.value);
+
+           if (!name) {
+             alert("Введите название товара.");
+             nameInput.focus();
+             return;
+           }
+           if (isNaN(qty) || qty <= 0) {
+             alert("Количество должно быть положительным числом.");
+             qtyInput.focus();
+             return;
+           }
+           if (isNaN(price) || price < 0) {
+             alert("Цена должна быть неотрицательным числом.");
+             priceInput.focus();
+             return;
+           }
+
+           try {
+             const res = await fetch(`/orders/${orderId}/items`, {
+               method: "POST",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify({ product_name: name, quantity: qty, price: price })
+             });
+
+             if (res.ok) {
+               location.reload(); // Перезагружаем, чтобы отобразить новый товар с ID и обновить итог
+             } else {
+               alert("Ошибка при добавлении товара");
+             }
+           } catch (error) {
+             console.error('Error:', error);
              alert("Ошибка при добавлении товара");
            }
-         })
-         .catch(error => {
-           console.error('Error:', error);
-           alert("Ошибка при добавлении товара");
+         };
+
+         // Кнопка отмены
+         cancelBtn.onclick = () => {
+           newCard.remove();
+         };
+
+         // Enter в поле названия = сохранить
+         nameInput.addEventListener('keypress', (e) => {
+           if (e.key === 'Enter') saveBtn.click();
          });
        };
     }
 
-    // Удаление товара
+    // Удаление товара (существующий код)
     document.body.addEventListener("click", async e => {
       if (!e.target.classList.contains("delete-item")) return;
       const card = e.target.closest("[data-id]");
@@ -227,7 +282,7 @@
       const res = await fetch(`/orders/${orderId}/items/${itemId}?_method=DELETE`, { method: "POST" });
       if (res.ok) {
         card.remove();
-        updateTotals(); // Обновляем итог после удаления
+        updateTotals();
       } else {
         alert("Ошибка удаления");
       }
@@ -242,7 +297,7 @@
         });
         if (!res.ok) throw new Error("Ошибка HTTP");
         const response = await res.json();
-        return response; // Возвращаем ответ сервера
+        return response;
       } catch (e) {
         alert("Ошибка обновления товара");
         console.error(e);
