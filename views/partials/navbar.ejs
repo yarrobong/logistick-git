@@ -1,20 +1,19 @@
 <!-- views/partials/navbar.ejs -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-    <div class="container-fluid px-3 px-md-4 px-lg-5"> <!-- Добавлены отступы по бокам для всех размеров экранов -->
-        <div class="d-flex flex-column flex-lg-row justify-content-between w-100"> <!-- Используем flex для лучшего выравнивания -->
-            <div class="d-flex align-items-center mb-2 mb-lg-0"> <!-- mb-2 на мобильных, mb-0 на lg+ -->
-                <a class="navbar-brand fs-4 fw-bold" href="/">Логистика BIZON</a> <!-- Увеличен размер и жирность бренда -->
-                <!-- Кнопка-тoggler внутри блока с брендом -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background-color: #213040;"> <!-- Используем ваш цвет фона -->
+    <div class="container-fluid px-3 px-md-4 px-lg-5">
+        <div class="d-flex flex-column flex-lg-row justify-content-between w-100">
+            <div class="d-flex align-items-center mb-2 mb-lg-0">
+                <a class="navbar-brand fs-4 fw-bold" href="/">Логистика BIZON</a>
                 <button class="navbar-toggler ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
             </div>
 
-            <div class="d-flex flex-column flex-lg-row w-100 w-lg-auto"> <!-- Обертка для меню и правого блока -->
+            <div class="d-flex flex-column flex-lg-row w-100 w-lg-auto">
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto me-lg-4"> <!-- me-lg-4 добавляет отступ справа от меню на lg+ -->
+                    <ul class="navbar-nav me-auto me-lg-4">
                         <li class="nav-item">
-                            <a class="nav-link fs-6" href="/orders">Заказы</a> <!-- Убраны отступы у элементов меню -->
+                            <a class="nav-link fs-6" href="/orders">Заказы</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link fs-6" href="/clients">Клиенты</a>
@@ -22,17 +21,16 @@
                     </ul>
                 </div>
 
-                <!-- Блок с информацией о пользователе и кнопкой выхода -->
                 <div class="d-flex align-items-center">
-                    <span class="navbar-text me-3 text-light d-none d-lg-block"> <!-- Скрыто на мобильных, видно на lg+ -->
+                    <span class="navbar-text me-3 text-light d-none d-lg-block">
                         Привет, <%= typeof session !== 'undefined' && session.username ? session.username : 'Админ' %>!
                     </span>
-                    <span class="navbar-text me-3 text-light d-lg-none"> <!-- Видно на мобильных, скрыто на lg+ -->
+                    <span class="navbar-text me-3 text-light d-lg-none">
                         <%= typeof session !== 'undefined' && session.username ? session.username : 'Админ' %>
                     </span>
-                    <ul class="navbar-nav mb-0"> <!-- mb-0 убирает нижний отступ у списка -->
+                    <ul class="navbar-nav mb-0">
                         <li class="nav-item">
-                            <a class="nav-link btn btn-outline-light btn-sm py-1 px-3" href="/logout">Выйти</a> <!-- Стилизована кнопка выхода -->
+                            <a class="nav-link btn btn-outline-light btn-sm py-1 px-3" href="/logout">Выйти</a>
                         </li>
                     </ul>
                 </div>
