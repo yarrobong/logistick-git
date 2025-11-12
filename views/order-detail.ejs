@@ -96,37 +96,7 @@
       color: #ffffff; /* Белый */
     }
 
-    /* --- НОВЫЕ СТИЛИ ДЛЯ ПОЗИЦИЙ --- */
-  .item-details {
-    display: flex;
-    flex-wrap: wrap; /* Перенос на новую строку при необходимости */
-    gap: 0.5rem; /* Отступ между элементами */
-    align-items: center; /* Выравнивание по центру */
-  }
-
-  .item-details div {
-    display: flex;
-    align-items: center; /* Выравнивание по центру по вертикали */
-    white-space: nowrap; /* Не переносить текст внутри */
-  }
-
-  /* На мобильных устройствах - вертикальный стек */
-  @media (max-width: 768px) {
-    .item-details {
-      flex-direction: column;
-      align-items: flex-start; /* Выравнивание по левому краю */
-    }
-
-    .item-details div {
-      width: 100%; /* Занимает всю ширину */
-      justify-content: space-between; /* Распределяет элементы по краям */
-    }
-
-    .item-actions {
-      opacity: 1; /* Всегда видно на мобильных */
-      margin-top: 0.5rem; /* Отступ сверху */
-    }
-  }
+    
   </style>
 </head>
 <body>
@@ -185,30 +155,26 @@
       <h2>Товары</h2>
       <div id="itemsContainer">
         <% if(order.items?.length) { order.items.forEach(item => { %>
-  <div class="card item-card mb-2" data-id="<%= item.id %>">
-    <div class="d-flex justify-content-between align-items-start">
-      <div class="flex-grow-1">
-        <strong class="editable-field" data-field="product_name"><%= item.product_name %></strong>
-        <div class="item-details mt-2">
-          <div>
-            Кол-во: <span class="editable-field" data-field="quantity"><%= item.quantity %></span>
+          <div class="card item-card p-3 mb-2" data-id="<%= item.id %>">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <strong class="editable-field" data-field="product_name"><%= item.product_name %></strong>
+                <div class="mt-2">
+                  Кол-во:
+                  <span class="editable-field" data-field="quantity"><%= item.quantity %></span>,
+                  Цена:
+                  <span class="editable-field" data-field="price"><%= (+item.price).toFixed(2) %></span>,
+                  Сумма: <span class="item-total"><%= (+item.item_total).toFixed(2) %></span>
+                </div>
+              </div>
+              <div class="item-actions">
+                <button class="btn btn-sm btn-outline-danger delete-item">×</button>
+              </div>
+            </div>
           </div>
-          <div>
-            Цена: <span class="editable-field" data-field="price"><%= (+ item.price).toFixed(2) %></span>
-          </div>
-          <div>
-            Сумма: <span class="item-total"><%= (+item.item_total).toFixed(2) %></span>
-          </div>
-        </div>
-      </div>
-      <div class="item-actions">
-        <button class="btn btn-sm btn-outline-danger delete-item">×</button>
-      </div>
-    </div>
-  </div>
-<% }) } else { %>
-  <p>Нет товаров</p>
-<% } %>
+        <% }) } else { %>
+          <p>Нет товаров</p>
+        <% } %>
       </div>
 
       <button class="btn btn-outline-light mt-2" id="addItemBtn">+ Добавить позицию</button>
