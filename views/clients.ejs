@@ -13,43 +13,130 @@
             color: #ffffff; 
         }
 
-        /* Таблица */
-        .table {
-            --bs-table-bg: #213040; /* Фон таблицы */
-            --bs-table-color: #ffffff; /* Цвет текста */
-            --bs-table-border-color: #3a3a3a; /* Цвет границ */
-            --bs-table-striped-bg: #253547; /* Фон чётных строк */
+        /* Стили для карточек клиентов */
+        .client-card {
+            background-color: #213040; 
+            border-radius: .5rem;
+            transition: .2s;
+            color: white;
+            padding: 1rem; /* Внутренний отступ */
         }
-        .table th {
-            border-top: none; /* Убираем верхнюю границу у заголовков */
-            color: #d0d0d0; /* Светло-серый для заголовков */
-        }
-        .table td, .table th {
-            border-color: #3a3a3a; /* Цвет внутренних границ */
+        .client-card:hover { 
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); 
+            border-color: #3a3a3a; 
         }
 
         /* Кнопки */
         .btn-outline-light {
-            border-color: #3a3a3a; /* Тёмная граница */
-            color: #d0d0d0; /* Светло-серый текст */
+            border-color: #3a3a3a; 
+            color: #d0d0d0; 
+            background-color: transparent;
         }
         .btn-outline-light:hover {
-            background-color: #3a3a3a; /* Тёмный фон при наведении */
-            color: #ffffff; /* Белый текст */
+            background-color: #3a3a3a; 
+            color: #ffffff; 
         }
 
-        /* Алерты */
-        .alert {
-            border: none;
-            border-radius: 0.375rem;
+        .btn-success {
+            background-color: #0088cc; 
+            border-color: #0088cc;
         }
-        .alert-danger {
-            background-color: #2d1e28; /* Тёмно-красный */
-            color: #ff6b6b; /* Светло-красный */
+        .btn-success:hover {
+            background-color: #0077b3; 
+            border-color: #0077b3;
         }
-        .alert-success {
-            background-color: #1e2d21; /* Тёмно-зелёный */
-            color: #4caf8b; /* Светло-зелёный */
+
+        .btn-outline-danger {
+            color: #ff3b30; 
+            border-color: #ff3b30;
+        }
+        .btn-outline-danger:hover {
+            background-color: #ff3b30; 
+            color: #ffffff; 
+        }
+
+        /* Вводы */
+        .form-control {
+            background-color: #213040; 
+            border: none; 
+            color: #ffffff; 
+        }
+        .form-control:focus {
+            background-color: #213040;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.2rem rgba(133, 193, 255, 0.25); 
+        }
+
+        /* Заголовки */
+        h1, h2, h3, h4, h5 {
+            color: #ffffff; 
+        }
+
+        /* --- НОВЫЕ СТИЛИ ДЛЯ ПОЗИЦИЙ --- */
+        .client-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            margin-top: 0.5rem; /* Отступ сверху */
+        }
+
+        .client-details div {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        /* На мобильных устройствах */
+        @media (max-width: 768px) {
+            .client-details {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
+            }
+
+            .client-details div {
+                width: 100%; /* Занимает всю ширину */
+                justify-content: flex-start; /* Выравнивание по левому краю */
+                gap: 0.25rem; /* Отступ между текстом и значением */
+            }
+
+            .client-details div::before {
+                content: attr(data-label) ": "; /* Добавляем подпись (например, "Телефон: ") */
+                white-space: nowrap;
+            }
+
+            .client-actions {
+                opacity: 1; /* Всегда видно */
+                margin-top: 0.5rem; 
+                align-self: center; 
+            }
+        }
+
+        /* Для ширины экрана меньше 1000px */
+        @media (max-width: 1000px) {
+            .client-card .d-flex.justify-content-between {
+                flex-direction: column; /* карточка вертикально */
+                gap: 0.5rem;
+            }
+
+            .client-card .flex-grow-1 div {
+                display: flex;
+                flex-direction: column; /* каждый элемент на своей строке */
+                gap: 0.25rem;
+                width: 100%;
+            }
+
+            .client-card .flex-grow-1 div .client-info,
+            .client-card .flex-grow-1 div .client-stats {
+                width: 100%; /* растягиваем на всю ширину */
+            }
+
+            .client-actions {
+                margin-top: 0.5rem;
+                width: 100%;
+                justify-content: flex-start;
+            }
         }
     </style>
 </head>
@@ -59,33 +146,37 @@
         <h1>Список Клиентов</h1>
 
         <% if (typeof clients !== 'undefined' && clients.length > 0) { %>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Имя</th>
-                            <th>Телефон</th>
-                            <th>Адрес</th>
-                            <th>Кол-во заказов</th>
-                            <th>Последний заказ</th>
-                            <th>Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% clients.forEach(client => { %>
-                            <tr>
-                                <td><a href="/clients/<%= client.id %>" class="text-decoration-none" style="color: #85c1ff;"> <%= client.name %></a></td> <!-- Голубой цвет для ссылки -->
-                                <td><%= client.phone || 'N/A' %></td>
-                                <td><%= client.address || 'N/A' %></td>
-                                <td><%= client.orderCount || 0 %></td>
-                                <td><%= client.lastOrderDate ? new Date(client.lastOrderDate).toLocaleDateString('ru-RU') : 'N/A' %></td>
-                                <td>
+            <div class="row g-3"> <!-- Bootstrap grid -->
+                <% clients.forEach(client => { %>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card client-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title mb-0">
+                                        <a href="/clients/<%= client.id %>" class="text-decoration-none" style="color: #85c1ff;"> <%= client.name %></a>
+                                    </h5>
+                                    <div class="client-details mt-2">
+                                        <div data-label="Телефон">
+                                            <span class="client-info"><%= client.phone || 'N/A' %></span>
+                                        </div>
+                                        <div data-label="Адрес">
+                                            <span class="client-info"><%= client.address || 'N/A' %></span>
+                                        </div>
+                                        <div data-label="Заказов">
+                                            <span class="client-stats"><%= client.orderCount || 0 %></span>
+                                        </div>
+                                        <div data-label="Последний">
+                                            <span class="client-stats"><%= client.lastOrderDate ? new Date(client.lastOrderDate).toLocaleDateString('ru-RU') : 'N/A' %></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="client-actions">
                                     <a href="/clients/<%= client.id %>" class="btn btn-outline-light btn-sm">Просмотр</a>
-                                </td>
-                            </tr>
-                        <% }); %>
-                    </tbody>
-                </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
             </div>
         <% } else { %>
             <p class="text-center">Клиентов пока нет.</p>
