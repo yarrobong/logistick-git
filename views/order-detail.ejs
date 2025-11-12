@@ -208,150 +208,132 @@
 
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/main.js"></script>
-        <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // ... (прочие переменные, не зависящие от 'order', можно оставить снаружи, если они существуют) ...
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Обработчик удаления заказа (только если кнопка и ID заказа существуют)
+            const deleteBtn = document.getElementById('deleteOrderBtn');
+            <% if (order) { %>
+                // Переменная orderId определена только если order существует
+                const orderId = <%= order.id %>;
 
-    // Основной блок, который выполняется ТОЛЬКО если 'order' существует (редактирование/просмотр)
-    <% if (order) { %>
-        // Определяем orderId только один раз внутри блока, где он нужен
-        const orderId = <%= order.id %>;
-
-        // --- Обработчик кнопки УДАЛЕНИЯ ЗАКАЗА ---
-        const deleteBtn = document.getElementById('deleteOrderBtn');
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', function() {
-                if (confirm('Вы уверены, что хотите УДАЛИТЬ этот заказ?')) {
-                    // Отправляем DELETE запрос напрямую через fetch
-                    fetch(`/orders/${orderId}`, {
-                        method: 'POST', // Используем POST, но с _method=DELETE
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded', // Указываем тип содержимого
-                            'X-Requested-With': 'XMLHttpRequest' // Опционально
-                        },
-                        // Отправляем _method=DELETE как часть тела
-                        body: '_method=DELETE'
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            // Перенаправляем на список заказов после успешного удаления
-                            window.location.href = '/orders';
-                        } else {
-                            // Обработка ошибки
-                            alert('Ошибка при удалении заказа.');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', function() {
+                        if (confirm('Вы уверены, что хотите УДАЛИТЬ этот заказ?')) {
+                            fetch(`/orders/${orderId}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                    'X-Requested-With': 'XMLHttpRequest' // Опционально
+                                },
+                                body: '_method=DELETE'
+                            })
+                            .then(response => {
+                                if (response.ok) {
+                                    // Перенаправляем на список заказов после успешного удаления
+                                    window.location.href = '/orders';
+                                } else {
+                                    // Обработка ошибки
+                                    alert('Ошибка при удалении заказа.');
+                                }
+                            })
+                            .catch(err => {
+                                console.error('Error:', err);
+                                alert('Ошибка при удалении заказа.');
+                            });
                         }
-                    })
-                    .catch(err => {
-                        console.error('Error:', err);
-                        alert('Ошибка при удалении заказа.');
                     });
                 }
-            });
-        }
 
-        // --- Остальная логика, зависящая от 'orderId' (редактирование товаров, обновление суммы и т.д.) ---
+                // --- Остальной JavaScript-код, зависящий от 'orderId' ---
+                const editModal = document.getElementById('editItemModal');
+                const editForm = document.getElementById('editItemForm');
+                const saveBtn = document.getElementById('saveItemChangesBtn');
+                const itemsTableBody = document.getElementById('itemsTableBody');
 
-        const editModal = document.getElementById('editItemModal');
-        const editForm = document.getElementById('editItemForm');
-        const saveBtn = document.getElementById('saveItemChangesBtn');
-        const itemsTableBody = document.getElementById('itemsTableBody');
+                editModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const itemId = button.getAttribute('data-item-id');
+                    const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+                    if (!row) return;
 
-        // Обработчик открытия модального окна редактирования товара
-        editModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const itemId = button.getAttribute('data-item-id');
-            const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
-            if (!row) return;
+                    const name = row.querySelector('.item-name').textContent;
+                    const quantity = row.querySelector('.item-quantity').textContent;
+                    const price = row.querySelector('.item-price').textContent;
 
-            const name = row.querySelector('.item-name').textContent;
-            const quantity = row.querySelector('.item-quantity').textContent;
-            const price = row.querySelector('.item-price').textContent;
+                    document.getElementById('editItemId').value = itemId;
+                    document.getElementById('editProductName').value = name;
+                    document.getElementById('editQuantity').value = parseInt(quantity);
+                    document.getElementById('editPrice').value = parseFloat(price);
 
-            document.getElementById('editItemId').value = itemId;
-            document.getElementById('editProductName').value = name;
-            document.getElementById('editQuantity').value = parseInt(quantity);
-            document.getElementById('editPrice').value = parseFloat(price);
+                    editForm.action = `/orders/${orderId}/items/${itemId}`;
+                });
 
-            // Устанавливаем action для формы редактирования товара
-            editForm.action = `/orders/${orderId}/items/${itemId}`;
-        });
+                saveBtn.addEventListener('click', function () {
+                    editForm.submit();
+                });
 
-        // Обработчик клика по кнопке "Сохранить" в модальном окне редактирования товара
-        saveBtn.addEventListener('click', function () {
-            editForm.submit(); // Просто отправляем форму, которая сама выполнит PUT запрос
-        });
-
-        // Обработчик удаления товара из таблицы (не из основной формы)
-        itemsTableBody.addEventListener('click', function(e) {
-            if (e.target.classList.contains('delete-item-btn')) {
-                const itemId = e.target.getAttribute('data-item-id');
-                if (confirm('Вы уверены, что хотите удалить этот товар?')) {
-                    fetch(`/orders/${orderId}/items/${itemId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
+                itemsTableBody.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('delete-item-btn')) {
+                        const itemId = e.target.getAttribute('data-item-id');
+                        if (confirm('Вы уверены, что хотите удалить этот товар?')) {
+                            fetch(`/orders/${orderId}/items/${itemId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            })
+                            .then(response => {
+                                if (response.ok) {
+                                    const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+                                    if (row) row.remove();
+                                    // location.reload(); // Опционально: перезагрузка страницы после удаления
+                                    // Лучше обновить сумму без перезагрузки, если реализована такая логика
+                                } else {
+                                    alert('Ошибка при удалении товара.');
+                                }
+                            })
+                            .catch(err => {
+                                console.error('Error:', err);
+                                alert('Ошибка при удалении товара.');
+                            });
                         }
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
-                            if (row) row.remove();
-                            // location.reload(); // Перезагрузка после удаления товара
-                            // Лучше обновить сумму без перезагрузки, если totalAmount пересчитывается на бэкенде при DELETE
-                            // Но если общая сумма отображается как фиксированное значение из EJS, перезагрузка может быть необходима
-                            location.reload(); // Пока оставим перезагрузку для обновления общей суммы
-                        } else {
-                            alert('Ошибка при удалении товара.');
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Error:', err);
-                        alert('Ошибка при удалении товара.');
-                    });
+                    }
+                });
+
+                // --- КОД ДЛЯ ОБНОВЛЕНИЯ ОБЩЕЙ СУММЫ ---
+                const shippingCostChinaMoscowInput = document.getElementById('shippingCostChinaMoscow');
+                const shippingCostMoscowDestinationInput = document.getElementById('shippingCostMoscowDestination');
+
+                if (shippingCostChinaMoscowInput && shippingCostMoscowDestinationInput) {
+                    shippingCostChinaMoscowInput.addEventListener('input', updateGrandTotalDisplay);
+                    shippingCostMoscowDestinationInput.addEventListener('input', updateGrandTotalDisplay);
+
+                    // Вызов функции при загрузке страницы для отображения начальной суммы
+                    updateGrandTotalDisplay();
                 }
-            }
+
+                // Функция для пересчёта и отображения общей суммы
+                function updateGrandTotalDisplay() {
+                    // Используем начальную сумму из рендеринга EJS и обновляем её
+                    // Предположим, что total_amount включает сумму товаров, но не доставку
+                    const totalAmountFromItems = parseFloat(<%= (order.total_amount || 0) %>) || 0;
+                    const shippingCostChinaMoscow = parseFloat(shippingCostChinaMoscowInput.value) || 0;
+                    const shippingCostMoscowDestination = parseFloat(shippingCostMoscowDestinationInput.value) || 0;
+                    const totalShipping = shippingCostChinaMoscow + shippingCostMoscowDestination;
+                    const grandTotal = totalAmountFromItems + totalShipping;
+
+                    document.getElementById('shippingCostDisplay').textContent = totalShipping.toFixed(2);
+                    document.getElementById('grandTotalDisplay').textContent = grandTotal.toFixed(2);
+                }
+                // --- КОНЕЦ КОДА ДЛЯ ОБНОВЛЕНИЯ ОБЩЕЙ СУММЫ ---
+
+            <% } %> // Закрывающая скобка для if (order)
+            // Закрывающая скобка для DOMContentLoaded
         });
-
-        // --- НОВЫЙ КОД ДЛЯ ОБНОВЛЕНИЯ ОБЩЕЙ СУММЫ (только на клиенте, если не пересчитывается на бэкенде при изменении доставки) ---
-        // Обновление общей суммы при изменении стоимости доставки Китай-Москва и Москва-Город
-        const shippingCostChinaMoscowInput = document.getElementById('shippingCostChinaMoscow');
-        const shippingCostMoscowDestinationInput = document.getElementById('shippingCostMoscowDestination');
-
-        if (shippingCostChinaMoscowInput && shippingCostMoscowDestinationInput) {
-            // Эти обработчики событий обновляют только отображение на клиенте
-            // Если total_amount на бэкенде НЕ пересчитывается при изменении shipping_cost_china_moscow/shipping_cost_moscow_destination,
-            // то это отображение будет отличаться от серверного значения после отправки формы.
-            // Если бэкенд пересчитывает, то перезагрузка страницы после PUT обновит значение.
-            shippingCostChinaMoscowInput.addEventListener('input', updateGrandTotalDisplay);
-            shippingCostMoscowDestinationInput.addEventListener('input', updateGrandTotalDisplay);
-
-            // Вызов функции при загрузке страницы для отображения начальной суммы
-            updateGrandTotalDisplay();
-        }
-
-        // Функция для пересчёта и отображения общей суммы на клиенте (без учёта items, если total_amount берётся из бэкенда)
-        // Используем серверное значение total_amount (из EJS) как базу
-        function updateGrandTotalDisplay() {
-            // Используем серверное значение total_amount для товаров
-            const totalAmountFromServer = <%= (order.total_amount || 0) %>; // Получаем значение из EJS
-            const shippingCostChinaMoscow = parseFloat(shippingCostChinaMoscowInput.value) || 0;
-            const shippingCostMoscowDestination = parseFloat(shippingCostMoscowDestinationInput.value) || 0;
-            const totalShipping = shippingCostChinaMoscow + shippingCostMoscowDestination;
-            const grandTotal = totalAmountFromServer + totalShipping; // total_amount (из items) + shipping_cost_china_moscow + shipping_cost_moscow_destination
-
-            // Обновляем отображение
-            document.getElementById('shippingCostDisplay').textContent = totalShipping.toFixed(2);
-            document.getElementById('grandTotalDisplay').textContent = grandTotal.toFixed(2);
-        }
-        // --- КОНЕЦ НОВОГО КОДА ---
-
-    <% } %> // Закрывающая скобка для <% if (order) { %>
-
-    // Здесь может быть код, который должен выполняться всегда (и при создании, и при редактировании),
-    // но в текущем контексте, вся важная логика зависит от 'order'.
-});
-</script>
+    </script>
+</body>
+</html>
 </body>
 </html>
