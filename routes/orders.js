@@ -247,6 +247,53 @@ router.post('/:orderId/items', async (req, res) => {
   }
 });
 
+router.post('/:orderId/items/:itemId', async (req, res) => {
+  const orderId = parseInt(req.params.orderId, 10);
+  const itemId = parseInt(req.params.itemId, 10);
+  const { quantity, price, product_name } = req.body;
+
+  // Если пришли только отдельные поля (например, при inline-редактировании)
+  if (quantity !== undefined || price !== undefined || product_name !== undefined) {
+    try {
+      // Проверим, что пришли только валидные поля
+      const updates = {};
+      if (quantity !== undefined) {
+        const q = parseFloat(quantity);
+        if (isNaN(q) || q < 1) {
+          return res.status(400).json({ error: 'Invalid quantity' });
+        }
+        updates.quantity = q;
+      }
+      if (price !== undefined) {
+        const p = parseFloat(price);
+        if (isNaN(p) || p < 0) {
+          return res.status(400).json({ error: 'Invalid price' });
+        }
+        updates.price = p;
+      }
+      if (product_name !== undefined) {
+        if (!product_name || product_name.trim() === '') {
+          return res.status(400).json({ error: 'Product name cannot be empty' });
+        }
+        updates.product_name = product_name.trim();
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await Order.updateItemFields(itemId, updates);
+        // Пересчитаем total_amount для заказа
+        await Order.calculateTotalAmount(orderId);
+        // Получим обновленный товар для возврата
+        const updatedItem = await Order.getItemById(itemId);
+        return res.json({ success: true, item: updatedItem });
+      } else {
+        return res.status(400).json({ error: 'No valid fields to update' });
+      }
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Error updating item' });
+    }
+  }
+
 // PUT /orders/:orderId/items/:itemId - обновить товар в заказе (используем POST с _method=PUT)
 router.post('/:orderId/items/:itemId', async (req, res) => {
   const orderId = parseInt(req.params.orderId, 10);

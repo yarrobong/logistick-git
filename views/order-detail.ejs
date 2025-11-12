@@ -420,34 +420,69 @@ document.querySelectorAll('.editable-field').forEach(field => {
                 });
 
                 // --- Функция обновления поля товара ---
-                function updateItemField(itemId, field, value) {
-                    fetch(`/orders/${orderId}/items/${itemId}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({ [field]: value })
-                    })
-                    .then(response => {
-                        if (!response.ok) throw new Error('Network response was not ok');
-                        return response.json();
-                    })
-                    .then(data => {
-                        // Обновляем сумму на карточке
-                        const card = document.querySelector(`[data-item-id="${itemId}"]`);
-                        if (card && field === 'quantity' || field === 'price') {
-                            const qty = parseFloat(card.querySelector('[data-field="quantity"]').textContent) || 0;
-                            const price = parseFloat(card.querySelector('[data-field="price"]').textContent) || 0;
-                            const total = qty * price;
-                            card.querySelector('div:last-child div:last-child span').textContent = total.toFixed(2);
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Error:', err);
-                        alert('Ошибка при обновлении товара.');
-                    });
+function updateItemField(itemId, field, value) {
+    let processedValue = value;
+
+    // Валидация и преобразование значений
+    if (field === 'quantity' || field === 'price') {
+        const numValue = parseFloat(value);
+        if (isNaN(numValue) || numValue < 0 || (field === 'quantity' && numValue < 1)) {
+            console.error(`Invalid value for ${field}: ${value}`);
+            // Возвращаем старое значение, если новое невалидно
+            location.reload(); // Или можно как-то по-другому обновить UI
+            return;
+        }
+        processedValue = numValue;
+    }
+
+    if (field === 'product_name' && (!value || value.trim() === '')) {
+        console.error(`Product name cannot be empty: ${value}`);
+        location.reload();
+        return;
+    }
+
+    fetch(`/orders/${orderId}/items/${itemId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ [field]: processedValue })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+    })
+    .then(data => {
+        // Обновляем сумму на карточке
+        const card = document.querySelector(`[data-item-id="${itemId}"]`);
+        if (card && (field === 'quantity' || field === 'price')) {
+            // Найдем обновленные значения в DOM
+            const qtyElement = card.querySelector('[data-field="quantity"]');
+            const priceElement = card.querySelector('[data-field="price"]');
+            if (qtyElement && priceElement) {
+                const qty = parseFloat(qtyElement.textContent) || 0;
+                const price = parseFloat(priceElement.textContent) || 0;
+                const total = qty * price;
+                // Найдем элемент суммы - предполагаем, что это span в последнем div
+                const totalElements = card.querySelectorAll('div span');
+                if (totalElements.length > 0) {
+                    const totalElement = totalElements[totalElements.length - 1];
+                    // Проверим, что это не поле "Получено"
+                    if (!totalElement.closest('input')) {
+                        totalElement.textContent = total.toFixed(2);
+                    }
                 }
+            }
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('Ошибка при обновлении товара.');
+        // Возвращаем старое значение
+        location.reload();
+    });
+}
 
                 // --- Функция обновления полученного количества ---
                 window.updateReceivedQuantity = function(itemId, value, maxQty) {

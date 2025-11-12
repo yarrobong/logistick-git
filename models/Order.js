@@ -71,6 +71,31 @@ const Order = {
        intermediaryMoscowDestination, trackingNumberMoscowDestination, id] // 9, 10, 11
     );
   },
+  updateItemFields: async (itemId, updates) => {
+    const fields = Object.keys(updates);
+    if (fields.length === 0) return;
+
+    const setClause = fields.map((field, index) => `${field} = $${index + 1}`).join(', ');
+    const values = Object.values(updates);
+    values.push(itemId); // Добавляем ID в конец для WHERE
+
+    const query = `UPDATE order_items SET ${setClause} WHERE id = $${fields.length + 1}`;
+    await db.query(query, values);
+
+    // Пересчитываем item_total
+    const itemResult = await db.query('SELECT quantity, price FROM order_items WHERE id = $1', [itemId]);
+    const item = itemResult.rows[0];
+    if (item) {
+        const itemTotal = item.quantity * item.price;
+        await db.query('UPDATE order_items SET item_total = $1 WHERE id = $2', [itemTotal, itemId]);
+    }
+},
+
+// Получить товар по ID
+getItemById: async (id) => {
+    const result = await db.query('SELECT * FROM order_items WHERE id = $1', [id]);
+    return result.rows[0];
+},
 
   // Удалить заказ (каскадно удалит связанные order_items)
   delete: async (id) => {
