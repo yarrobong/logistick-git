@@ -60,11 +60,22 @@
                                 <!-- Город -->
                                 <p class="card-text mb-1"><%= order.destination_city || 'N/A' %></p>
                                 
-                                <p class="order-id mb-2">
-    <% if (order.intermediary_moscow_destination) { %>
-        <%= order.intermediary_moscow_destination %> - <%= order.tracking_number_moscow_destination || '№ трека: не указан' %>
-    <% } else if (order.intermediary_china_moscow) { %>
-        <%= order.intermediary_china_moscow %> - <%= order.tracking_number_china_moscow || '№ трека: не указан' %>
+                               <!-- Посредник и трек-номер -->
+<p class="order-id mb-2">
+    <% if (order.intermediary_moscow_destination && order.intermediary_moscow_destination.trim() !== '') { %>
+        <%= order.intermediary_moscow_destination.trim() %> - 
+        <% if (order.tracking_number_moscow_destination && order.tracking_number_moscow_destination.trim() !== '') { %>
+            <%= order.tracking_number_moscow_destination.trim() %>
+        <% } else { %>
+            № трека: не указан
+        <% } %>
+    <% } else if (order.intermediary_china_moscow && order.intermediary_china_moscow.trim() !== '') { %>
+        <%= order.intermediary_china_moscow.trim() %> - 
+        <% if (order.tracking_number_china_moscow && order.tracking_number_china_moscow.trim() !== '') { %>
+            <%= order.tracking_number_china_moscow.trim() %>
+        <% } else { %>
+            № трека: не указан
+        <% } %>
     <% } else { %>
         Посредник: не указан - № трека: не указан
     <% } %>
