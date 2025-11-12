@@ -51,6 +51,15 @@
         .item-card:hover .item-actions {
             opacity: 1;
         }
+        .editable-field {
+    border: 1px dashed transparent;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+}
+.editable-field:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
     </style>
 </head>
 <body class="bg-dark text-light">
@@ -293,51 +302,57 @@
                 }
 
                 // --- Обработка редактируемых полей ---
-                document.querySelectorAll('.editable-field').forEach(field => {
-                    field.addEventListener('focus', function() {
-                        const fieldKey = this.getAttribute('data-field');
-                        const itemId = this.getAttribute('data-item-id');
-                        const currentValue = this.textContent;
+document.querySelectorAll('.editable-field').forEach(field => {
+    // Делаем элемент фокусируемым
+    field.setAttribute('tabindex', '-1');
+    field.style.outline = 'none'; // Убираем стандартный outline при фокусе
 
-                        // Заменяем на input
-                        const input = document.createElement('input');
-                        input.type = fieldKey === 'price' || fieldKey === 'quantity' ? 'number' : 'text';
-                        input.className = 'form-control form-control-sm';
-                        input.value = currentValue;
-                        input.setAttribute('data-field', fieldKey);
-                        input.setAttribute('data-item-id', itemId);
-                        if (fieldKey === 'quantity' || fieldKey === 'price') {
-                            input.step = '0.01';
-                            input.min = '0';
-                            if (fieldKey === 'quantity') input.min = '1';
-                        }
+    field.addEventListener('click', function() {
+        const fieldKey = this.getAttribute('data-field');
+        const itemId = this.getAttribute('data-item-id');
+        const currentValue = this.textContent;
 
-                        this.replaceWith(input);
-                        input.focus();
+        // Заменяем на input
+        const input = document.createElement('input');
+        input.type = fieldKey === 'price' || fieldKey === 'quantity' ? 'number' : 'text';
+        input.className = 'form-control form-control-sm';
+        input.value = currentValue;
+        input.setAttribute('data-field', fieldKey);
+        input.setAttribute('data-item-id', itemId);
+        if (fieldKey === 'quantity' || fieldKey === 'price') {
+            input.step = '0.01';
+            input.min = '0';
+            if (fieldKey === 'quantity') input.min = '1';
+        }
 
-                        // Обработчик потери фокуса
-                        input.addEventListener('blur', function() {
-                            const newValue = this.value;
-                            const originalField = document.createElement('span');
-                            originalField.className = 'editable-field';
-                            originalField.setAttribute('data-field', fieldKey);
-                            originalField.setAttribute('data-item-id', itemId);
-                            originalField.textContent = newValue;
-                            originalField.addEventListener('focus', arguments.callee);
-                            this.replaceWith(originalField);
+        this.replaceWith(input);
+        input.focus();
 
-                            // Отправляем изменения на сервер
-                            updateItemField(itemId, fieldKey, newValue);
-                        });
+        // Обработчик потери фокуса
+        input.addEventListener('blur', function() {
+            const newValue = this.value;
+            const originalField = document.createElement('span');
+            originalField.className = 'editable-field';
+            originalField.setAttribute('data-field', fieldKey);
+            originalField.setAttribute('data-item-id', itemId);
+            originalField.setAttribute('tabindex', '-1');
+            originalField.style.outline = 'none';
+            originalField.textContent = newValue;
+            originalField.addEventListener('click', arguments.callee);
+            this.replaceWith(originalField);
 
-                        // Обработчик Enter
-                        input.addEventListener('keypress', function(e) {
-                            if (e.key === 'Enter') {
-                                this.blur();
-                            }
-                        });
-                    });
-                });
+            // Отправляем изменения на сервер
+            updateItemField(itemId, fieldKey, newValue);
+        });
+
+        // Обработчик Enter
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                this.blur();
+            }
+        });
+    });
+});
 
                 // --- Обработчик кнопки "Добавить ещё позицию" ---
                 document.getElementById('addItemBtn').addEventListener('click', function() {
