@@ -6,6 +6,52 @@
     <title><%= order ? `Заказ #${order.id}` : 'Новый Заказ' %></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .item-card {
+            transition: box-shadow 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            background-color: #343a40;
+            margin-bottom: 1rem;
+        }
+        .item-card:hover {
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.3);
+        }
+        .item-card .form-control,
+        .item-card .form-select {
+            background-color: #495057;
+            color: white;
+            border: 1px solid #6c757d;
+        }
+        .item-card .form-control:focus,
+        .item-card .form-select:focus {
+            background-color: #495057;
+            color: white;
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        .editable-field {
+            border: 1px dashed transparent;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+        .editable-field:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .editable-field:focus {
+            outline: none;
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        .item-actions {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .item-card:hover .item-actions {
+            opacity: 1;
+        }
+    </style>
 </head>
 <body class="bg-dark text-light">
     <%- include('partials/navbar') %>
@@ -18,9 +64,8 @@
             <% } %>
             <div class="row">
                 <div class="col-md-6">
-                                        <div class="mb-3">
+                    <div class="mb-3">
                         <label for="clientName" class="form-label">Имя клиента</label>
-                        <!-- Отображаем имя клиента при редактировании -->
                         <% if (order && order.client_name) { %>
                             <input type="text" class="form-control" id="clientName" name="clientName" value="<%= order.client_name %>" required>
                         <% } else { %>
@@ -29,14 +74,12 @@
                     </div>
                     <div class="mb-3">
                         <label for="clientPhone" class="form-label">Телефон клиента</label>
-                        <!-- Отображаем телефон клиента при редактировании -->
                         <% if (order && order.client_phone) { %>
                             <input type="text" class="form-control" id="clientPhone" name="clientPhone" value="<%= order.client_phone %>">
                         <% } else { %>
                             <input type="text" class="form-control" id="clientPhone" name="clientPhone" placeholder="Введите телефон клиента">
                         <% } %>
                     </div>
-                    <!-- Скрытое поле для ID клиента (если редактируем заказ, чтобы не терять привязку) -->
                     <% if (order && order.client_id) { %>
                         <input type="hidden" name="clientId" value="<%= order.client_id %>">
                     <% } %>
@@ -44,10 +87,9 @@
                         <label for="destinationCity" class="form-label">Город получателя</label>
                         <input type="text" class="form-control" id="destinationCity" name="destinationCity" value="<%= order ? order.destination_city : '' %>" required>
                     </div>
-                   <div class="mb-3">
+                    <div class="mb-3">
                         <label for="status" class="form-label">Статус</label>
                         <select class="form-select" id="status" name="status" required>
-                           
                             <option value="" <%= (!order || order.status === '') ? 'selected' : '' %>>Выберите статус</option>
                             <% STATUS_CONFIG.ORDER_STATUSES.forEach(status => { %>
                                 <option value="<%= status.value %>" <%= (order && order.status === status.value) ? 'selected' : '' %>><%= status.label %></option>
@@ -58,7 +100,7 @@
                         <label for="orderDate" class="form-label">Дата заказа</label>
                         <input type="date" class="form-control" id="orderDate" name="orderDate"
        value="<%= order ? (order.order_date instanceof Date ? order.order_date.getFullYear() + '-' + String(order.order_date.getMonth() + 1).padStart(2, '0') + '-' + String(order.order_date.getDate()).padStart(2, '0') : order.order_date) : new Date().toISOString().split('T')[0] %>">
-    </div>
+                    </div>
                     <div class="mb-3">
                         <label for="shippingCostChinaMoscow" class="form-label">Доставка Китай-Москва</label>
                         <input type="number" class="form-control" id="shippingCostChinaMoscow" name="shippingCostChinaMoscow" step="0.01" value="<%= order ? order.shipping_cost_china_moscow : '0.00' %>">
@@ -89,24 +131,19 @@
                 </div>
             </div>
             <button type="submit" class="btn btn-primary"><%= order ? 'Обновить Заказ' : 'Создать Заказ' %></button>
-            </form> <!-- ЗАКРЫВАЕМ основную форму #orderForm ТУТ -->
+        </form>
 
-            <% if (order) { %>
-                <a href="/orders" class="btn btn-secondary">Назад к списку</a>
-                <!-- Форма удаления ТЕПЕРЬ ВНЕ основной формы -->
-                <button type="button" class="btn btn-outline-danger" id="deleteOrderBtn">Удалить заказ</button>
-            <% } %>
-        
+        <% if (order) { %>
+            <a href="/orders" class="btn btn-secondary">Назад к списку</a>
+            <button type="button" class="btn btn-outline-danger" id="deleteOrderBtn">Удалить заказ</button>
+        <% } %>
 
         <!-- Секция для товаров -->
         <% if (order) { %>
             <hr class="my-4">
             <h2>Товары в заказе</h2>
 
-            <!-- Форма добавления товара ТЕПЕРЬ ТОЖЕ ВНЕ основной формы #orderForm -->
-            <!-- ВНИМАНИЕ: Это означает, что она не будет отправлять данные основной формы при добавлении товара. -->
-            <!-- Это, скорее всего, правильное поведение, так как добавление товара - это отдельное действие. -->
-            <form id="addItemForm" action="/orders/<%= order.id %>/items" method="POST">
+            <form id="itemsForm" action="/orders/<%= order.id %>/items" method="POST">
                 <div class="row">
                     <div class="col-md-4">
                         <input type="text" class="form-control mb-2" name="productName" placeholder="Наименование товара" required>
@@ -123,39 +160,57 @@
                 </div>
             </form>
 
-            <div class="table-responsive mt-3">
-                <table class="table table-dark table-striped">
-                    <thead>
-                        <tr>
-                            <th>Наименование</th>
-                            <th>Кол-во</th>
-                            <th>Цена за ед.</th>
-                            <th>Сумма</th>
-                            <th>Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody id="itemsTableBody">
-                        <% if (order.items && order.items.length > 0) { %>
-                            <% order.items.forEach(item => { %>
-                                <tr data-item-id="<%= item.id %>">
-                                    <td class="item-name"><%= item.product_name %></td>
-                                                                        <td class="item-quantity"><%= item.quantity %></td>
-                                    <td class="item-price"><%= (parseFloat(item.price) || 0).toFixed(2) %></td>
-                                    <td class="item-total"><%= (parseFloat(item.item_total) || 0).toFixed(2) %></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-info me-1 edit-item-btn" data-bs-toggle="modal" data-bs-target="#editItemModal" data-item-id="<%= item.id %>">Ред.</button>
+            <div id="itemsContainer">
+                <% if (order.items && order.items.length > 0) { %>
+                    <% order.items.forEach(item => { %>
+                        <div class="card item-card bg-secondary text-white mb-3" data-item-id="<%= item.id %>">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1 me-3">
+                                        <!-- Наименование -->
+                                        <div class="mb-2">
+                                            <strong class="editable-field" data-field="productName" data-item-id="<%= item.id %>"><%= item.product_name %></strong>
+                                        </div>
+                                        <!-- Количество и цена -->
+                                        <div class="d-flex gap-3 mb-2">
+                                            <div>
+                                                Всего: <span class="editable-field" data-field="quantity" data-item-id="<%= item.id %>"><%= item.quantity %></span>
+                                            </div>
+                                            <div>
+                                                Цена за ед.: <span class="editable-field" data-field="price" data-item-id="<%= item.id %>"><%= (parseFloat(item.price) || 0).toFixed(2) %></span>
+                                            </div>
+                                            <div>
+                                                Сумма: <span><%= (parseFloat(item.item_total) || 0).toFixed(2) %></span>
+                                            </div>
+                                        </div>
+                                        <!-- Получено -->
+                                        <div class="mt-2">
+                                            Получено:
+                                            <input type="number" class="form-control form-control-sm d-inline-block w-auto ms-2" style="width: 100px !important;" 
+                                                   value="<%= item.received_quantity || 0 %>" 
+                                                   min="0" 
+                                                   max="<%= item.quantity %>" 
+                                                   onchange="updateReceivedQuantity(<%= item.id %>, this.value, <%= item.quantity %>)">
+                                            <small class="text-muted">/ <%= item.quantity %></small>
+                                        </div>
+                                    </div>
+                                    <div class="item-actions">
                                         <button class="btn btn-sm btn-outline-danger delete-item-btn" data-item-id="<%= item.id %>">Удл.</button>
-                                    </td>
-                                </tr>
-                            <% }); %>
-                        <% } else { %>
-                            <tr><td colspan="5" class="text-center">Товаров в заказе пока нет.</td></tr>
-                        <% } %>
-                    </tbody>
-                </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <p class="text-center">Товаров в заказе пока нет.</p>
+                <% } %>
             </div>
 
-                        <div class="d-flex justify-content-end">
+            <div class="mt-3">
+                <button type="button" class="btn btn-outline-light" id="addItemBtn">+ Добавить ещё позицию</button>
+            </div>
+
+            <div class="d-flex justify-content-end">
                 <h4>Итого: <span id="totalAmountDisplay"><%= (parseFloat(order.total_amount) || 0).toFixed(2) %></span> + Доставка: <span id="shippingCostDisplay"><%= (parseFloat(order.shipping_cost) || 0).toFixed(2) %></span> = <span id="grandTotalDisplay"><%= ((parseFloat(order.total_amount) || 0) + (parseFloat(order.shipping_cost) || 0)).toFixed(2) %></span></h4>
             </div>
 
@@ -178,7 +233,7 @@
                                     <label for="editQuantity" class="form-label">Количество</label>
                                     <input type="number" class="form-control" id="editQuantity" name="quantity" min="1" required>
                                 </div>
-                                                                <div class="mb-3">
+                                <div class="mb-3">
                                     <label for="editPrice" class="form-label">Цена за ед.</label>
                                     <input type="number" class="form-control" id="editPrice" name="price" step="0.01" min="0" required>
                                 </div>
@@ -191,7 +246,6 @@
                     </div>
                 </div>
             </div>
-
         <% } %>
 
         <!-- Flash сообщения -->
@@ -205,45 +259,202 @@
                 <div class="alert alert-success"><%= msg %></div>
             <% }); %>
         <% } %>
-
     </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/main.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Обработчик удаления заказа (только если кнопка и ID заказа существуют)
+            // Обработчик удаления заказа
             const deleteBtn = document.getElementById('deleteOrderBtn');
             <% if (order) { %>
-                // Переменная orderId определена только если order существует
                 const orderId = <%= order.id %>;
 
                 if (deleteBtn) {
-    deleteBtn.addEventListener('click', function() {
-        console.log("Кнопка удаления нажата, готов к отправке запроса!"); // <-- Добавьте это
-        if (confirm('Вы уверены, что хотите УДАЛИТЬ этот заказ?')) {
-            console.log("Подтверждение получено, отправляю fetch..."); // <-- И это
-            fetch(`/orders/${orderId}?_method=DELETE`, {
-  method: 'POST',
-  headers: { 'X-Requested-With': 'XMLHttpRequest' }
-})
-            .then(response => {
-                console.log("Ответ получен:", response.status); // <-- И это
-                if (response.ok) {
-                    window.location.href = '/orders';
-                } else {
-                    alert('Ошибка при удалении заказа.');
-                }
-            })
-            .catch(err => {
-                console.error('Error:', err);
-                alert('Ошибка при удалении заказа.');
-            });
+                    deleteBtn.addEventListener('click', function() {
+                        if (confirm('Вы уверены, что хотите УДАЛИТЬ этот заказ?')) {
+                            fetch(`/orders/${orderId}?_method=DELETE`, {
+                                method: 'POST',
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                            })
+                            .then(response => {
+                                if (response.ok) {
+                                    window.location.href = '/orders';
+                                } else {
+                                    alert('Ошибка при удалении заказа.');
+                                }
+                            })
+                            .catch(err => {
+                                console.error('Error:', err);
+                                alert('Ошибка при удалении заказа.');
+                            });
                         }
                     });
                 }
 
-                // --- Остальной JavaScript-код, зависящий от 'orderId' ---
+                // --- Обработка редактируемых полей ---
+                document.querySelectorAll('.editable-field').forEach(field => {
+                    field.addEventListener('focus', function() {
+                        const fieldKey = this.getAttribute('data-field');
+                        const itemId = this.getAttribute('data-item-id');
+                        const currentValue = this.textContent;
+
+                        // Заменяем на input
+                        const input = document.createElement('input');
+                        input.type = fieldKey === 'price' || fieldKey === 'quantity' ? 'number' : 'text';
+                        input.className = 'form-control form-control-sm';
+                        input.value = currentValue;
+                        input.setAttribute('data-field', fieldKey);
+                        input.setAttribute('data-item-id', itemId);
+                        if (fieldKey === 'quantity' || fieldKey === 'price') {
+                            input.step = '0.01';
+                            input.min = '0';
+                            if (fieldKey === 'quantity') input.min = '1';
+                        }
+
+                        this.replaceWith(input);
+                        input.focus();
+
+                        // Обработчик потери фокуса
+                        input.addEventListener('blur', function() {
+                            const newValue = this.value;
+                            const originalField = document.createElement('span');
+                            originalField.className = 'editable-field';
+                            originalField.setAttribute('data-field', fieldKey);
+                            originalField.setAttribute('data-item-id', itemId);
+                            originalField.textContent = newValue;
+                            originalField.addEventListener('focus', arguments.callee);
+                            this.replaceWith(originalField);
+
+                            // Отправляем изменения на сервер
+                            updateItemField(itemId, fieldKey, newValue);
+                        });
+
+                        // Обработчик Enter
+                        input.addEventListener('keypress', function(e) {
+                            if (e.key === 'Enter') {
+                                this.blur();
+                            }
+                        });
+                    });
+                });
+
+                // --- Обработчик кнопки "Добавить ещё позицию" ---
+                document.getElementById('addItemBtn').addEventListener('click', function() {
+                    const container = document.createElement('div');
+                    container.className = 'card item-card bg-secondary text-white mb-3';
+                    container.innerHTML = `
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1 me-3">
+                                    <div class="mb-2">
+                                        <input type="text" class="form-control form-control-sm" placeholder="Наименование" name="productName" required>
+                                    </div>
+                                    <div class="d-flex gap-3 mb-2">
+                                        <div>
+                                            <input type="number" class="form-control form-control-sm d-inline w-auto" style="width: 80px !important;" placeholder="Кол-во" name="quantity" min="1" value="1" required>
+                                        </div>
+                                        <div>
+                                            <input type="number" class="form-control form-control-sm d-inline w-auto" style="width: 100px !important;" placeholder="Цена" name="price" step="0.01" min="0" required>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        Получено:
+                                        <input type="number" class="form-control form-control-sm d-inline-block w-auto ms-2" style="width: 100px !important;" 
+                                               value="0" min="0" placeholder="0"
+                                               onchange="this.value = Math.min(this.value, this.max);">
+                                        <small class="text-muted">/ <span class="max-qty">1</span></small>
+                                    </div>
+                                </div>
+                                <div class="item-actions">
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-item-btn">Удл.</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('itemsContainer').appendChild(container);
+
+                    // Обработчик кнопки удаления новой позиции
+                    container.querySelector('.remove-item-btn').addEventListener('click', function() {
+                        container.remove();
+                    });
+                });
+
+                // --- Обработчик удаления товара ---
+                document.querySelectorAll('.delete-item-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const itemId = this.getAttribute('data-item-id');
+                        if (confirm('Вы уверены, что хотите удалить этот товар?')) {
+                            fetch(`/orders/${orderId}/items/${itemId}?_method=DELETE`, {
+                                method: 'POST',
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                            })
+                            .then(response => {
+                                if (response.ok) {
+                                    document.querySelector(`[data-item-id="${itemId}"]`).remove();
+                                } else {
+                                    alert('Ошибка при удалении товара.');
+                                }
+                            })
+                            .catch(err => {
+                                console.error('Error:', err);
+                                alert('Ошибка при удалении товара.');
+                            });
+                        }
+                    });
+                });
+
+                // --- Функция обновления поля товара ---
+                function updateItemField(itemId, field, value) {
+                    fetch(`/orders/${orderId}/items/${itemId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ [field]: value })
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Обновляем сумму на карточке
+                        const card = document.querySelector(`[data-item-id="${itemId}"]`);
+                        if (card && field === 'quantity' || field === 'price') {
+                            const qty = parseFloat(card.querySelector('[data-field="quantity"]').textContent) || 0;
+                            const price = parseFloat(card.querySelector('[data-field="price"]').textContent) || 0;
+                            const total = qty * price;
+                            card.querySelector('div:last-child div:last-child span').textContent = total.toFixed(2);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        alert('Ошибка при обновлении товара.');
+                    });
+                }
+
+                // --- Функция обновления полученного количества ---
+                window.updateReceivedQuantity = function(itemId, value, maxQty) {
+                    value = Math.min(Math.max(0, parseInt(value) || 0), maxQty);
+                    fetch(`/orders/${orderId}/items/${itemId}/received`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ received_quantity: value })
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        alert('Ошибка при обновлении полученного количества.');
+                    });
+                };
+
+                // --- Остальной JavaScript-код ---
                 const editModal = document.getElementById('editItemModal');
                 const editForm = document.getElementById('editItemForm');
                 const saveBtn = document.getElementById('saveItemChangesBtn');
@@ -271,32 +482,6 @@
                     editForm.submit();
                 });
 
-                itemsTableBody.addEventListener('click', function(e) {
-                    if (e.target.classList.contains('delete-item-btn')) {
-                        const itemId = e.target.getAttribute('data-item-id');
-                        if (confirm('Вы уверены, что хотите удалить этот товар?')) {
-                            fetch(`/orders/${orderId}?_method=DELETE`, {
-  method: 'POST',
-  headers: { 'X-Requested-With': 'XMLHttpRequest' }
-})
-                            .then(response => {
-                                if (response.ok) {
-                                    const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
-                                    if (row) row.remove();
-                                    // location.reload(); // Опционально: перезагрузка страницы после удаления
-                                    // Лучше обновить сумму без перезагрузки, если реализована такая логика
-                                } else {
-                                    alert('Ошибка при удалении товара.');
-                                }
-                            })
-                            .catch(err => {
-                                console.error('Error:', err);
-                                alert('Ошибка при удалении товара.');
-                            });
-                        }
-                    }
-                });
-
                 // --- КОД ДЛЯ ОБНОВЛЕНИЯ ОБЩЕЙ СУММЫ ---
                 const shippingCostChinaMoscowInput = document.getElementById('shippingCostChinaMoscow');
                 const shippingCostMoscowDestinationInput = document.getElementById('shippingCostMoscowDestination');
@@ -304,15 +489,10 @@
                 if (shippingCostChinaMoscowInput && shippingCostMoscowDestinationInput) {
                     shippingCostChinaMoscowInput.addEventListener('input', updateGrandTotalDisplay);
                     shippingCostMoscowDestinationInput.addEventListener('input', updateGrandTotalDisplay);
-
-                    // Вызов функции при загрузке страницы для отображения начальной суммы
                     updateGrandTotalDisplay();
                 }
 
-                // Функция для пересчёта и отображения общей суммы
                 function updateGrandTotalDisplay() {
-                    // Используем начальную сумму из рендеринга EJS и обновляем её
-                    // Предположим, что total_amount включает сумму товаров, но не доставку
                     const totalAmountFromItems = parseFloat(<%= (order.total_amount || 0) %>) || 0;
                     const shippingCostChinaMoscow = parseFloat(shippingCostChinaMoscowInput.value) || 0;
                     const shippingCostMoscowDestination = parseFloat(shippingCostMoscowDestinationInput.value) || 0;
@@ -322,13 +502,8 @@
                     document.getElementById('shippingCostDisplay').textContent = totalShipping.toFixed(2);
                     document.getElementById('grandTotalDisplay').textContent = grandTotal.toFixed(2);
                 }
-                // --- КОНЕЦ КОДА ДЛЯ ОБНОВЛЕНИЯ ОБЩЕЙ СУММЫ ---
-
-            <% } %> // Закрывающая скобка для if (order)
-            // Закрывающая скобка для DOMContentLoaded
+            <% } %>
         });
     </script>
-</body>
-</html>
 </body>
 </html>
