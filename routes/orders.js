@@ -284,17 +284,17 @@ router.delete('/:id', async (req, res) => {
   try {
     await Order.delete(orderId); // Вызываем метод delete из модели
     req.flash('success', 'Заказ успешно удален.');
-    res.status(200).send('OK'); // Ответ для AJAX, если используется
-    // Или редирект, если кнопка не AJAX:
-    // res.redirect('/orders'); // Раскомментируйте, если хотите редирект
+    // Важно: выполнить только ОДИН ответ
+    // res.status(200).send('OK'); // Это для AJAX
+    res.redirect('/orders'); // Это для обычной формы
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при удалении заказа.');
-    res.status(500).send('Internal Server Error');
-    // Или редирект с ошибкой:
-    // res.redirect('/orders'); // Раскомментируйте, если хотите редирект
+    // Важно: выполнить только ОДИН ответ
+    // res.status(500).send('Internal Server Error'); // Это для AJAX
+    res.redirect('/orders'); // Это для обычной формы с flash-сообщением об ошибке
   }
-  res.redirect('/orders');
+  // Удаляем строку res.redirect('/orders'); за пределами catch
 });
 
 

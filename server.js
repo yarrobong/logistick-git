@@ -25,11 +25,12 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Middleware
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Парсит URL-encoded тела (например, формы)
+app.use(express.json()); // Парсит JSON тела
+app.use(methodOverride('_method')); // Должен идти после парсинга тела
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(methodOverride('_method'));
+// ... остальные middleware и маршруты ...
 
 // Настройка сессии
 app.use(session({
@@ -40,7 +41,7 @@ app.use(session({
   secret: 'your_secret_key_here', // Замените на случайный секретный ключ
   resave: false,
   saveUninitialized: false,
-  cookie: { 
+  cookie: {
     secure: false, // Установите в true, если используете HTTPS
     maxAge: 30 * 24 * 60 * 60 * 1000 // 30 дней в миллисекундах (опционально)
   }
@@ -49,16 +50,6 @@ app.use(session({
 app.use(flash());
 
 // Установка переменной для проверки аутентификации в шаблонах
-app.use((req, res, next) => {
-  res.locals.messages = {
-    error: req.flash('error'),
-    success: req.flash('success')
-  };
-  res.locals.isAuthenticated = req.session.isLoggedIn;
-  next();
-});
-
-// Установка переменной для проверки аутентификации в шаблонах и статусов
 app.use((req, res, next) => {
   res.locals.messages = {
     error: req.flash('error'),
@@ -88,8 +79,6 @@ app.get('/dashboard', authMiddleware, (req, res) => {
 app.use((req, res) => {
   res.status(404).render('404');
 });
-
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
