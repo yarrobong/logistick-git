@@ -219,30 +219,30 @@
                 const orderId = <%= order.id %>;
 
                 if (deleteBtn) {
-                    deleteBtn.addEventListener('click', function() {
-                         console.log("Кнопка удаления нажата!");
-                        if (confirm('Вы уверены, что хотите УДАЛИТЬ этот заказ?')) {
-                            fetch(`/orders/${orderId}`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/x-www-form-urlencoded',
-                                    'X-Requested-With': 'XMLHttpRequest' // Опционально
-                                },
-                                body: '_method=DELETE'
-                            })
-                            .then(response => {
-                                if (response.ok) {
-                                    // Перенаправляем на список заказов после успешного удаления
-                                    window.location.href = '/orders';
-                                } else {
-                                    // Обработка ошибки
-                                    alert('Ошибка при удалении заказа.');
-                                }
-                            })
-                            .catch(err => {
-                                console.error('Error:', err);
-                                alert('Ошибка при удалении заказа.');
-                            });
+    deleteBtn.addEventListener('click', function() {
+        console.log("Кнопка удаления нажата, готов к отправке запроса!"); // <-- Добавьте это
+        if (confirm('Вы уверены, что хотите УДАЛИТЬ этот заказ?')) {
+            console.log("Подтверждение получено, отправляю fetch..."); // <-- И это
+            fetch(`/orders/${orderId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest' // Опционально
+                },
+                body: '_method=DELETE'
+            })
+            .then(response => {
+                console.log("Ответ получен:", response.status); // <-- И это
+                if (response.ok) {
+                    window.location.href = '/orders';
+                } else {
+                    alert('Ошибка при удалении заказа.');
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Ошибка при удалении заказа.');
+            });
                         }
                     });
                 }
