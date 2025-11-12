@@ -152,23 +152,6 @@
             <hr class="my-4">
             <h2>Товары в заказе</h2>
 
-            <form id="itemsForm" action="/orders/<%= order.id %>/items" method="POST">
-                <div class="row">
-                    <div class="col-md-4">
-                        <input type="text" class="form-control mb-2" name="productName" placeholder="Наименование товара" required>
-                    </div>
-                    <div class="col-md-2">
-                        <input type="number" class="form-control mb-2" name="quantity" placeholder="Количество" min="1" value="1" required>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="number" class="form-control mb-2" name="price" step="0.01" placeholder="Цена за ед." min="0" required>
-                    </div>
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-success w-100">Добавить Товар</button>
-                    </div>
-                </div>
-            </form>
-
             <div id="itemsContainer">
                 <% if (order.items && order.items.length > 0) { %>
                     <% order.items.forEach(item => { %>
