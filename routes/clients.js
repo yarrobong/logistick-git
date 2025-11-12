@@ -91,12 +91,11 @@ console.log('ClientId:', clientId);
 console.log('Found client:', client);
 console.log('Orders:', client.orders.length);
     // Вот ключевой момент: filename передается в **опциях**, а не в данных
-    res.render('client-detail', { 
+    res.render('client-detail', {
   client,
   STATUS_CONFIG,
   messages: { error: req.flash('error'), success: req.flash('success') },
-  session: req.session,
-  filename: path.join(__dirname, '../views/client-detail.ejs')
+  session: req.session
 });
   } catch (err) {
     console.error(err);
