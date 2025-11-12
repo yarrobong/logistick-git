@@ -78,7 +78,15 @@
         <% } %>
     <% } else { %>
         Посредник: не указан - № трека: не указан
+        <div class="alert alert-info">
+    Debug: 
+    intermediary_moscow_destination: '<%= order.intermediary_moscow_destination %>', 
+    tracking_number_moscow_destination: '<%= order.tracking_number_moscow_destination %>', 
+    intermediary_china_moscow: '<%= order.intermediary_china_moscow %>', 
+    tracking_number_china_moscow: '<%= order.tracking_number_china_moscow %>'
+</div>
     <% } %>
+
 </p>
 
                                 <!-- Дополнительная информация -->
