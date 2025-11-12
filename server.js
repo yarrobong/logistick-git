@@ -8,6 +8,11 @@ const ejs = require('ejs');
 const path = require('path');
 const STATUS_CONFIG = require('./config/statuses');
 
+app.use((req, res, next) => {
+  res.locals.session = req.session;
+  next();
+});
+
 // Импорты маршрутов и middleware
 const authRoutes = require('./routes/auth');
 const orderRoutes = require('./routes/orders');
