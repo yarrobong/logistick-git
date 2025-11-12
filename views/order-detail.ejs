@@ -1,542 +1,199 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= order ? `Заказ #${order.id}` : 'Новый Заказ' %></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
-    <style>
-        .item-card {
-            transition: box-shadow 0.2s;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 0.5rem;
-            background-color: #343a40;
-            margin-bottom: 1rem;
-        }
-        .item-card:hover {
-            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.3);
-        }
-        .item-card .form-control,
-        .item-card .form-select {
-            background-color: #495057;
-            color: white;
-            border: 1px solid #6c757d;
-        }
-        .item-card .form-control:focus,
-        .item-card .form-select:focus {
-            background-color: #495057;
-            color: white;
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-        .editable-field {
-            border: 1px dashed transparent;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            cursor: pointer;
-        }
-        .editable-field:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        .editable-field:focus {
-            outline: none;
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-        .item-actions {
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        .item-card:hover .item-actions {
-            opacity: 1;
-        }
-        .editable-field {
-    border: 1px dashed transparent;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    cursor: pointer;
-}
-.editable-field:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= order ? `Заказ #${order.id}` : 'Новый Заказ' %></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #212529; color: #fff; }
+    .item-card {
+      background-color: #2d3238;
+      border-radius: .5rem;
+      border: 1px solid rgba(255,255,255,.1);
+      transition: .2s;
+    }
+    .item-card:hover { box-shadow: 0 0 10px rgba(0,0,0,.4); }
+    .editable-field { cursor: pointer; border-bottom: 1px dashed transparent; }
+    .editable-field:hover { border-bottom: 1px dashed #86b7fe; }
+    .item-actions { opacity: 0; transition: .2s; }
+    .item-card:hover .item-actions { opacity: 1; }
+  </style>
 </head>
-<body class="bg-dark text-light">
-    <%- include('partials/navbar') %>
-    <div class="container mt-4">
-        <h1><%= order ? `Заказ #${order.id}` : 'Новый Заказ' %></h1>
+<body>
+  <%- include('partials/navbar') %>
+  <div class="container mt-4">
+    <h1><%= order ? `Заказ #${order.id}` : 'Новый Заказ' %></h1>
 
-        <form id="orderForm" action="<%= order ? `/orders/${order.id}` : '/orders' %>" method="POST">
-            <% if(order) { %>
-                <input type="hidden" name="_method" value="PUT">
-            <% } %>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="clientName" class="form-label">Имя клиента</label>
-                        <% if (order && order.client_name) { %>
-                            <input type="text" class="form-control" id="clientName" name="clientName" value="<%= order.client_name %>" required>
-                        <% } else { %>
-                            <input type="text" class="form-control" id="clientName" name="clientName" placeholder="Введите имя клиента" required>
-                        <% } %>
-                    </div>
-                    <div class="mb-3">
-                        <label for="clientPhone" class="form-label">Телефон клиента</label>
-                        <% if (order && order.client_phone) { %>
-                            <input type="text" class="form-control" id="clientPhone" name="clientPhone" value="<%= order.client_phone %>">
-                        <% } else { %>
-                            <input type="text" class="form-control" id="clientPhone" name="clientPhone" placeholder="Введите телефон клиента">
-                        <% } %>
-                    </div>
-                    <% if (order && order.client_id) { %>
-                        <input type="hidden" name="clientId" value="<%= order.client_id %>">
-                    <% } %>
-                    <div class="mb-3">
-                        <label for="destinationCity" class="form-label">Город получателя</label>
-                        <input type="text" class="form-control" id="destinationCity" name="destinationCity" value="<%= order ? order.destination_city : '' %>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="status" class="form-label">Статус</label>
-                        <select class="form-select" id="status" name="status" required>
-                            <option value="" <%= (!order || order.status === '') ? 'selected' : '' %>>Выберите статус</option>
-                            <% STATUS_CONFIG.ORDER_STATUSES.forEach(status => { %>
-                                <option value="<%= status.value %>" <%= (order && order.status === status.value) ? 'selected' : '' %>><%= status.label %></option>
-                            <% }); %>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="orderDate" class="form-label">Дата заказа</label>
-                        <input type="date" class="form-control" id="orderDate" name="orderDate"
-       value="<%= order ? (order.order_date instanceof Date ? order.order_date.getFullYear() + '-' + String(order.order_date.getMonth() + 1).padStart(2, '0') + '-' + String(order.order_date.getDate()).padStart(2, '0') : order.order_date) : new Date().toISOString().split('T')[0] %>">
-                    </div>
-                    <div class="mb-3">
-                        <label for="shippingCostChinaMoscow" class="form-label">Доставка Китай-Москва</label>
-                        <input type="number" class="form-control" id="shippingCostChinaMoscow" name="shippingCostChinaMoscow" step="0.01" value="<%= order ? order.shipping_cost_china_moscow : '0.00' %>">
-                    </div>
-                    <div class="mb-3">
-                        <label for="shippingCostMoscowDestination" class="form-label">Доставка Москва-Город клиента</label>
-                        <input type="number" class="form-control" id="shippingCostMoscowDestination" name="shippingCostMoscowDestination" step="0.01" value="<%= order ? order.shipping_cost_moscow_destination : '0.00' %>">
-                    </div>
+    <form id="orderForm" action="<%= order ? `/orders/${order.id}` : '/orders' %>" method="POST">
+      <% if(order) { %><input type="hidden" name="_method" value="PUT"><% } %>
+
+      <div class="row">
+        <div class="col-md-6">
+          <label class="form-label mt-2">Имя клиента</label>
+          <input type="text" class="form-control" name="clientName" required value="<%= order?.client_name || '' %>">
+
+          <label class="form-label mt-2">Телефон</label>
+          <input type="text" class="form-control" name="clientPhone" value="<%= order?.client_phone || '' %>">
+
+          <label class="form-label mt-2">Город получателя</label>
+          <input type="text" class="form-control" name="destinationCity" required value="<%= order?.destination_city || '' %>">
+
+          <label class="form-label mt-2">Дата заказа</label>
+          <input type="date" class="form-control" name="orderDate"
+            value="<%= order ? new Date(order.order_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0] %>">
+
+          <label class="form-label mt-2">Доставка Китай-Москва</label>
+          <input type="number" step="0.01" class="form-control" id="ship1" name="shippingCostChinaMoscow" value="<%= order?.shipping_cost_china_moscow || 0 %>">
+
+          <label class="form-label mt-2">Доставка Москва-Город</label>
+          <input type="number" step="0.01" class="form-control" id="ship2" name="shippingCostMoscowDestination" value="<%= order?.shipping_cost_moscow_destination || 0 %>">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label mt-2">Посредник Китай-Москва</label>
+          <input type="text" class="form-control" name="intermediaryChinaMoscow" value="<%= order?.intermediary_china_moscow || '' %>">
+
+          <label class="form-label mt-2">Трек-номер Китай-Москва</label>
+          <input type="text" class="form-control" name="trackingNumberChinaMoscow" value="<%= order?.tracking_number_china_moscow || '' %>">
+
+          <label class="form-label mt-2">Посредник Москва-Город</label>
+          <input type="text" class="form-control" name="intermediaryMoscowDestination" value="<%= order?.intermediary_moscow_destination || '' %>">
+
+          <label class="form-label mt-2">Трек-номер Москва-Город</label>
+          <input type="text" class="form-control" name="trackingNumberMoscowDestination" value="<%= order?.tracking_number_moscow_destination || '' %>">
+        </div>
+      </div>
+
+      <button class="btn btn-primary mt-3"><%= order ? 'Обновить заказ' : 'Создать заказ' %></button>
+    </form>
+
+    <% if(order) { %>
+      <button class="btn btn-outline-danger mt-3" id="deleteOrderBtn">Удалить заказ</button>
+      <a href="/orders" class="btn btn-secondary mt-3">Назад</a>
+
+      <hr>
+      <h2>Товары</h2>
+      <div id="itemsContainer">
+        <% if(order.items?.length) { order.items.forEach(item => { %>
+          <div class="card item-card p-3 mb-2" data-id="<%= item.id %>">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <strong class="editable-field" data-field="product_name"><%= item.product_name %></strong>
+                <div class="mt-2">
+                  Кол-во:
+                  <span class="editable-field" data-field="quantity"><%= item.quantity %></span>,
+                  Цена:
+                  <span class="editable-field" data-field="price"><%= (+item.price).toFixed(2) %></span>,
+                  Сумма: <span class="item-total"><%= (+item.item_total).toFixed(2) %></span>
                 </div>
-                <div class="col-md-6">
-                    <h4>Этапы доставки</h4>
-                    <div class="mb-3">
-                        <label for="intermediaryChinaMoscow" class="form-label">Посредник Китай-Москва</label>
-                        <input type="text" class="form-control" id="intermediaryChinaMoscow" name="intermediaryChinaMoscow" value="<%= order ? order.intermediary_china_moscow : '' %>">
-                    </div>
-                    <div class="mb-3">
-                        <label for="trackingNumberChinaMoscow" class="form-label">Трек-номер Китай-Москва</label>
-                        <input type="text" class="form-control" id="trackingNumberChinaMoscow" name="trackingNumberChinaMoscow" value="<%= order ? order.tracking_number_china_moscow : '' %>">
-                    </div>
-                    <div class="mb-3">
-                        <label for="intermediaryMoscowDestination" class="form-label">Посредник Москва-Город</label>
-                        <input type="text" class="form-control" id="intermediaryMoscowDestination" name="intermediaryMoscowDestination" value="<%= order ? order.intermediary_moscow_destination : '' %>">
-                    </div>
-                    <div class="mb-3">
-                        <label for="trackingNumberMoscowDestination" class="form-label">Трек-номер Москва-Город</label>
-                        <input type="text" class="form-control" id="trackingNumberMoscowDestination" name="trackingNumberMoscowDestination" value="<%= order ? order.tracking_number_moscow_destination : '' %>">
-                    </div>
-                </div>
+              </div>
+              <div class="item-actions">
+                <button class="btn btn-sm btn-outline-danger delete-item">×</button>
+              </div>
             </div>
-            <button type="submit" class="btn btn-primary"><%= order ? 'Обновить Заказ' : 'Создать Заказ' %></button>
-        </form>
-
-        <% if (order) { %>
-            <a href="/orders" class="btn btn-secondary">Назад к списку</a>
-            <button type="button" class="btn btn-outline-danger" id="deleteOrderBtn">Удалить заказ</button>
+          </div>
+        <% }) } else { %>
+          <p>Нет товаров</p>
         <% } %>
+      </div>
 
-        <!-- Секция для товаров -->
-        <% if (order) { %>
-            <hr class="my-4">
-            <h2>Товары в заказе</h2>
+      <button class="btn btn-outline-light mt-2" id="addItemBtn">+ Добавить позицию</button>
+      <div class="d-flex justify-content-end mt-3">
+        <h5>Итого: <span id="totalAmountDisplay"><%= (+order.total_amount).toFixed(2) %></span></h5>
+      </div>
+    <% } %>
+  </div>
 
-            <div id="itemsContainer">
-                <% if (order.items && order.items.length > 0) { %>
-                    <% order.items.forEach(item => { %>
-                        <div class="card item-card bg-secondary text-white mb-3" data-item-id="<%= item.id %>">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-grow-1 me-3">
-                                        <!-- Наименование -->
-                                        <div class="mb-2">
-                                            <strong class="editable-field" data-field="productName" data-item-id="<%= item.id %>"><%= item.product_name %></strong>
-                                        </div>
-                                        <!-- Количество и цена -->
-                                        <div class="d-flex gap-3 mb-2">
-                                            <div>
-                                                Всего: <span class="editable-field" data-field="quantity" data-item-id="<%= item.id %>"><%= item.quantity %></span>
-                                            </div>
-                                            <div>
-                                                Цена за ед.: <span class="editable-field" data-field="price" data-item-id="<%= item.id %>"><%= (parseFloat(item.price) || 0).toFixed(2) %></span>
-                                            </div>
-                                            <div>
-                                                Сумма: <span><%= (parseFloat(item.item_total) || 0).toFixed(2) %></span>
-                                            </div>
-                                        </div>
-                                        <!-- Получено -->
-                                        <div class="mt-2">
-                                            Получено:
-                                            <input type="number" class="form-control form-control-sm d-inline-block w-auto ms-2" style="width: 100px !important;" 
-                                                   value="<%= item.received_quantity || 0 %>" 
-                                                   min="0" 
-                                                   max="<%= item.quantity %>" 
-                                                   onchange="updateReceivedQuantity(<%= item.id %>, this.value, <%= item.quantity %>)">
-                                            <small class="text-muted">/ <%= item.quantity %></small>
-                                        </div>
-                                    </div>
-                                    <div class="item-actions">
-                                        <button class="btn btn-sm btn-outline-danger delete-item-btn" data-item-id="<%= item.id %>">Удл.</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    <% }); %>
-                <% } else { %>
-                    <p class="text-center">Товаров в заказе пока нет.</p>
-                <% } %>
-            </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const orderId = <%= order ? order.id : 'null' %>;
 
-            <div class="mt-3">
-                <button type="button" class="btn btn-outline-light" id="addItemBtn">+ Добавить ещё позицию</button>
-            </div>
+      // Удаление заказа
+      const delOrderBtn = document.getElementById('deleteOrderBtn');
+      if (delOrderBtn) {
+        delOrderBtn.onclick = async () => {
+          if (!confirm("Удалить заказ?")) return;
+          const res = await fetch(`/orders/${orderId}?_method=DELETE`, { method: "POST" });
+          if (res.ok) location.href = "/orders";
+          else alert("Ошибка удаления");
+        };
+      }
 
-            <div class="d-flex justify-content-end">
-                <h4>Итого: <span id="totalAmountDisplay"><%= (parseFloat(order.total_amount) || 0).toFixed(2) %></span> + Доставка: <span id="shippingCostDisplay"><%= (parseFloat(order.shipping_cost) || 0).toFixed(2) %></span> = <span id="grandTotalDisplay"><%= ((parseFloat(order.total_amount) || 0) + (parseFloat(order.shipping_cost) || 0)).toFixed(2) %></span></h4>
-            </div>
-
-            <div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content bg-secondary text-white">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="editItemModalLabel">Редактировать Товар</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="editItemForm" method="POST">
-                                <input type="hidden" id="editItemId" name="itemId">
-                                <input type="hidden" name="_method" value="PUT">
-                                <div class="mb-3">
-                                    <label for="editProductName" class="form-label">Наименование</label>
-                                    <input type="text" class="form-control" id="editProductName" name="productName" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editQuantity" class="form-label">Количество</label>
-                                    <input type="number" class="form-control" id="editQuantity" name="quantity" min="1" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editPrice" class="form-label">Цена за ед.</label>
-                                    <input type="number" class="form-control" id="editPrice" name="price" step="0.01" min="0" required>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                            <button type="button" class="btn btn-primary" id="saveItemChangesBtn">Сохранить</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        <% } %>
-
-        <!-- Flash сообщения -->
-        <% if (messages.error.length > 0) { %>
-            <% messages.error.forEach(msg => { %>
-                <div class="alert alert-danger"><%= msg %></div>
-            <% }); %>
-        <% } %>
-        <% if (messages.success.length > 0) { %>
-            <% messages.success.forEach(msg => { %>
-                <div class="alert alert-success"><%= msg %></div>
-            <% }); %>
-        <% } %>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/main.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Обработчик удаления заказа
-            const deleteBtn = document.getElementById('deleteOrderBtn');
-            <% if (order) { %>
-                const orderId = <%= order.id %>;
-
-                if (deleteBtn) {
-                    deleteBtn.addEventListener('click', function() {
-                        if (confirm('Вы уверены, что хотите УДАЛИТЬ этот заказ?')) {
-                            fetch(`/orders/${orderId}?_method=DELETE`, {
-                                method: 'POST',
-                                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                            })
-                            .then(response => {
-                                if (response.ok) {
-                                    window.location.href = '/orders';
-                                } else {
-                                    alert('Ошибка при удалении заказа.');
-                                }
-                            })
-                            .catch(err => {
-                                console.error('Error:', err);
-                                alert('Ошибка при удалении заказа.');
-                            });
-                        }
-                    });
-                }
-
-                // --- Обработка редактируемых полей ---
-document.querySelectorAll('.editable-field').forEach(field => {
-    // Делаем элемент фокусируемым
-    field.setAttribute('tabindex', '-1');
-    field.style.outline = 'none'; // Убираем стандартный outline при фокусе
-
-    field.addEventListener('click', function() {
-        const fieldKey = this.getAttribute('data-field');
-        const itemId = this.getAttribute('data-item-id');
-        const currentValue = this.textContent;
-
-        // Заменяем на input
-        const input = document.createElement('input');
-        input.type = fieldKey === 'price' || fieldKey === 'quantity' ? 'number' : 'text';
-        input.className = 'form-control form-control-sm';
-        input.value = currentValue;
-        input.setAttribute('data-field', fieldKey);
-        input.setAttribute('data-item-id', itemId);
-        if (fieldKey === 'quantity' || fieldKey === 'price') {
-            input.step = '0.01';
-            input.min = '0';
-            if (fieldKey === 'quantity') input.min = '1';
-        }
-
-        this.replaceWith(input);
+      // Inline редактирование
+      document.body.addEventListener("click", e => {
+        if (!e.target.classList.contains("editable-field")) return;
+        const span = e.target;
+        const field = span.dataset.field;
+        const parent = span.closest("[data-id]");
+        const itemId = parent.dataset.id;
+        const input = document.createElement("input");
+        input.type = (field === "quantity" || field === "price") ? "number" : "text";
+        input.value = span.textContent.trim();
+        input.className = "form-control form-control-sm d-inline w-auto";
+        span.replaceWith(input);
         input.focus();
 
-        // Обработчик потери фокуса
-        input.addEventListener('blur', function() {
-            const newValue = this.value;
-            const originalField = document.createElement('span');
-            originalField.className = 'editable-field';
-            originalField.setAttribute('data-field', fieldKey);
-            originalField.setAttribute('data-item-id', itemId);
-            originalField.setAttribute('tabindex', '-1');
-            originalField.style.outline = 'none';
-            originalField.textContent = newValue;
-            originalField.addEventListener('click', arguments.callee);
-            this.replaceWith(originalField);
-
-            // Отправляем изменения на сервер
-            updateItemField(itemId, fieldKey, newValue);
+        input.addEventListener("blur", async () => {
+          const newValue = input.value.trim();
+          await updateItem(itemId, field, newValue);
+          span.textContent = newValue;
+          input.replaceWith(span);
+          updateTotals();
         });
-
-        // Обработчик Enter
-        input.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                this.blur();
-            }
+        input.addEventListener("keydown", ev => {
+          if (ev.key === "Enter") input.blur();
         });
-    });
-});
+      });
 
-                // --- Обработчик кнопки "Добавить ещё позицию" ---
-                document.getElementById('addItemBtn').addEventListener('click', function() {
-                    const container = document.createElement('div');
-                    container.className = 'card item-card bg-secondary text-white mb-3';
-                    container.innerHTML = `
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div class="flex-grow-1 me-3">
-                                    <div class="mb-2">
-                                        <input type="text" class="form-control form-control-sm" placeholder="Наименование" name="productName" required>
-                                    </div>
-                                    <div class="d-flex gap-3 mb-2">
-                                        <div>
-                                            <input type="number" class="form-control form-control-sm d-inline w-auto" style="width: 80px !important;" placeholder="Кол-во" name="quantity" min="1" value="1" required>
-                                        </div>
-                                        <div>
-                                            <input type="number" class="form-control form-control-sm d-inline w-auto" style="width: 100px !important;" placeholder="Цена" name="price" step="0.01" min="0" required>
-                                        </div>
-                                    </div>
-                                    <div class="mt-2">
-                                        Получено:
-                                        <input type="number" class="form-control form-control-sm d-inline-block w-auto ms-2" style="width: 100px !important;" 
-                                               value="0" min="0" placeholder="0"
-                                               onchange="this.value = Math.min(this.value, this.max);">
-                                        <small class="text-muted">/ <span class="max-qty">1</span></small>
-                                    </div>
-                                </div>
-                                <div class="item-actions">
-                                    <button type="button" class="btn btn-sm btn-outline-danger remove-item-btn">Удл.</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    document.getElementById('itemsContainer').appendChild(container);
+      // Добавление товара
+      const addBtn = document.getElementById("addItemBtn");
+      if (addBtn) {
+        addBtn.onclick = async () => {
+          const name = prompt("Название товара:");
+          if (!name) return;
+          const qty = +prompt("Количество:", 1);
+          const price = +prompt("Цена:", 0);
+          const res = await fetch(`/orders/${orderId}/items`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ product_name: name, quantity: qty, price })
+          });
+          if (res.ok) location.reload();
+          else alert("Ошибка при добавлении");
+        };
+      }
 
-                    // Обработчик кнопки удаления новой позиции
-                    container.querySelector('.remove-item-btn').addEventListener('click', function() {
-                        container.remove();
-                    });
-                });
+      // Удаление товара
+      document.body.addEventListener("click", async e => {
+        if (!e.target.classList.contains("delete-item")) return;
+        const card = e.target.closest("[data-id]");
+        const itemId = card.dataset.id;
+        if (!confirm("Удалить позицию?")) return;
+        const res = await fetch(`/orders/${orderId}/items/${itemId}?_method=DELETE`, { method: "POST" });
+        if (res.ok) card.remove(); else alert("Ошибка удаления");
+        updateTotals();
+      });
 
-                // --- Обработчик удаления товара ---
-                document.querySelectorAll('.delete-item-btn').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const itemId = this.getAttribute('data-item-id');
-                        if (confirm('Вы уверены, что хотите удалить этот товар?')) {
-                            fetch(`/orders/${orderId}/items/${itemId}?_method=DELETE`, {
-                                method: 'POST',
-                                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                            })
-                            .then(response => {
-                                if (response.ok) {
-                                    document.querySelector(`[data-item-id="${itemId}"]`).remove();
-                                } else {
-                                    alert('Ошибка при удалении товара.');
-                                }
-                            })
-                            .catch(err => {
-                                console.error('Error:', err);
-                                alert('Ошибка при удалении товара.');
-                            });
-                        }
-                    });
-                });
-
-                // --- Функция обновления поля товара ---
-function updateItemField(itemId, field, value) {
-    let processedValue = value;
-
-    // Валидация и преобразование значений
-    if (field === 'quantity' || field === 'price') {
-        const numValue = parseFloat(value);
-        if (isNaN(numValue) || numValue < 0 || (field === 'quantity' && numValue < 1)) {
-            console.error(`Invalid value for ${field}: ${value}`);
-            // Возвращаем старое значение, если новое невалидно
-            location.reload(); // Или можно как-то по-другому обновить UI
-            return;
+      async function updateItem(id, field, value) {
+        try {
+          const res = await fetch(`/orders/${orderId}/items/${id}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ [field]: value })
+          });
+          if (!res.ok) throw new Error();
+        } catch {
+          alert("Ошибка обновления товара");
         }
-        processedValue = numValue;
-    }
+      }
 
-    if (field === 'product_name' && (!value || value.trim() === '')) {
-        console.error(`Product name cannot be empty: ${value}`);
-        location.reload();
-        return;
-    }
-
-    fetch(`/orders/${orderId}/items/${itemId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({ [field]: processedValue })
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Network response was not ok');
-        return response.json();
-    })
-    .then(data => {
-        // Обновляем сумму на карточке
-        const card = document.querySelector(`[data-item-id="${itemId}"]`);
-        if (card && (field === 'quantity' || field === 'price')) {
-            // Найдем обновленные значения в DOM
-            const qtyElement = card.querySelector('[data-field="quantity"]');
-            const priceElement = card.querySelector('[data-field="price"]');
-            if (qtyElement && priceElement) {
-                const qty = parseFloat(qtyElement.textContent) || 0;
-                const price = parseFloat(priceElement.textContent) || 0;
-                const total = qty * price;
-                // Найдем элемент суммы - предполагаем, что это span в последнем div
-                const totalElements = card.querySelectorAll('div span');
-                if (totalElements.length > 0) {
-                    const totalElement = totalElements[totalElements.length - 1];
-                    // Проверим, что это не поле "Получено"
-                    if (!totalElement.closest('input')) {
-                        totalElement.textContent = total.toFixed(2);
-                    }
-                }
-            }
-        }
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        alert('Ошибка при обновлении товара.');
-        // Возвращаем старое значение
-        location.reload();
+      function updateTotals() {
+        const totals = [...document.querySelectorAll(".item-total")];
+        const sum = totals.reduce((acc, t) => acc + (+t.textContent || 0), 0);
+        document.getElementById("totalAmountDisplay").textContent = sum.toFixed(2);
+      }
     });
-}
-
-                // --- Функция обновления полученного количества ---
-                window.updateReceivedQuantity = function(itemId, value, maxQty) {
-                    value = Math.min(Math.max(0, parseInt(value) || 0), maxQty);
-                    fetch(`/orders/${orderId}/items/${itemId}/received`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({ received_quantity: value })
-                    })
-                    .then(response => {
-                        if (!response.ok) throw new Error('Network response was not ok');
-                    })
-                    .catch(err => {
-                        console.error('Error:', err);
-                        alert('Ошибка при обновлении полученного количества.');
-                    });
-                };
-
-                // --- Остальной JavaScript-код ---
-                const editModal = document.getElementById('editItemModal');
-                const editForm = document.getElementById('editItemForm');
-                const saveBtn = document.getElementById('saveItemChangesBtn');
-                const itemsTableBody = document.getElementById('itemsTableBody');
-
-                editModal.addEventListener('show.bs.modal', function (event) {
-                    const button = event.relatedTarget;
-                    const itemId = button.getAttribute('data-item-id');
-                    const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
-                    if (!row) return;
-
-                    const name = row.querySelector('.item-name').textContent;
-                    const quantity = row.querySelector('.item-quantity').textContent;
-                    const price = row.querySelector('.item-price').textContent;
-
-                    document.getElementById('editItemId').value = itemId;
-                    document.getElementById('editProductName').value = name;
-                    document.getElementById('editQuantity').value = parseInt(quantity);
-                    document.getElementById('editPrice').value = parseFloat(price);
-
-                    editForm.action = `/orders/${orderId}/items/${itemId}`;
-                });
-
-                saveBtn.addEventListener('click', function () {
-                    editForm.submit();
-                });
-
-                // --- КОД ДЛЯ ОБНОВЛЕНИЯ ОБЩЕЙ СУММЫ ---
-                const shippingCostChinaMoscowInput = document.getElementById('shippingCostChinaMoscow');
-                const shippingCostMoscowDestinationInput = document.getElementById('shippingCostMoscowDestination');
-
-                if (shippingCostChinaMoscowInput && shippingCostMoscowDestinationInput) {
-                    shippingCostChinaMoscowInput.addEventListener('input', updateGrandTotalDisplay);
-                    shippingCostMoscowDestinationInput.addEventListener('input', updateGrandTotalDisplay);
-                    updateGrandTotalDisplay();
-                }
-
-                function updateGrandTotalDisplay() {
-                    const totalAmountFromItems = parseFloat(<%= (order.total_amount || 0) %>) || 0;
-                    const shippingCostChinaMoscow = parseFloat(shippingCostChinaMoscowInput.value) || 0;
-                    const shippingCostMoscowDestination = parseFloat(shippingCostMoscowDestinationInput.value) || 0;
-                    const totalShipping = shippingCostChinaMoscow + shippingCostMoscowDestination;
-                    const grandTotal = totalAmountFromItems + totalShipping;
-
-                    document.getElementById('shippingCostDisplay').textContent = totalShipping.toFixed(2);
-                    document.getElementById('grandTotalDisplay').textContent = grandTotal.toFixed(2);
-                }
-            <% } %>
-        });
-    </script>
+  </script>
 </body>
 </html>
