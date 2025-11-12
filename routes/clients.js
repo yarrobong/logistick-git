@@ -8,15 +8,13 @@ const STATUS_CONFIG = require('../config/statuses'); // Импортируем �
 // GET /clients - отобразить список всех клиентов
 router.get('/', async (req, res) => {
   try {
-    // Заменяем на существующий метод
     const clients = await Client.findAll();
-    // Если в модели нет метода для получения статистики заказов,
-    // можно получить их отдельно или использовать пустой массив
     for (let client of clients) {
-      // Получаем количество заказов и последнюю дату (если нужно)
-      const orders = await Order.findByClientId(client.id);
-      client.orderCount = orders.length;
-      client.lastOrderDate = orders.length > 0 ? orders[0].order_date : null; // Предполагаем, что сортировка по дате
+      // Используем Order.findAll и фильтруем на клиенте
+      const allOrders = await Order.findAll(); // или Order.findByClientId, если добавите метод
+      const clientOrders = allOrders.filter(order => order.client_id === client.id);
+      client.orderCount = clientOrders.length;
+      client.lastOrderDate = clientOrders.length > 0 ? clientOrders[0].order_date : null;
     }
     res.render('clients', { clients, STATUS_CONFIG, messages: req.flash() });
   } catch (err) {
