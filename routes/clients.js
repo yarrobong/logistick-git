@@ -2,8 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const Client = require('../models/Client');
-const Order = require('../models/Order'); // Добавлено для получения заказов
-const STATUS_CONFIG = require('../config/statuses'); // Импортируем статусы
+const Order = require('../models/Order');
+const STATUS_CONFIG = require('../config/statuses');
 
 // GET /clients - отобразить список всех клиентов
 router.get('/', async (req, res) => {
@@ -11,15 +11,19 @@ router.get('/', async (req, res) => {
     const clients = await Client.findAll();
     for (let client of clients) {
       // Используем Order.findAll и фильтруем на клиенте
-      const allOrders = await Order.findAll(); // или Order.findByClientId, если добавите метод
+      const allOrders = await Order.findAll();
       const clientOrders = allOrders.filter(order => order.client_id === client.id);
       client.orderCount = clientOrders.length;
       client.lastOrderDate = clientOrders.length > 0 ? clientOrders[0].order_date : null;
     }
-    res.render('clients', { clients, STATUS_CONFIG, messages: { 
-  error: req.flash('error'), 
-  success: req.flash('success') 
-}});
+    res.render('clients', { 
+      clients, 
+      STATUS_CONFIG, 
+      messages: { 
+        error: req.flash('error'), 
+        success: req.flash('success') 
+      } 
+    });
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке клиентов.');
@@ -29,7 +33,14 @@ router.get('/', async (req, res) => {
 
 // GET /clients/new - отобразить форму для создания нового клиента
 router.get('/new', (req, res) => {
-  res.render('client-form', { client: null, STATUS_CONFIG, messages: req.flash() });
+  res.render('client-form', { 
+    client: null, 
+    STATUS_CONFIG, 
+    messages: { 
+      error: req.flash('error'), 
+      success: req.flash('success') 
+    } 
+  });
 });
 
 // POST /clients - создать нового клиента
@@ -68,11 +79,19 @@ router.get('/:id', async (req, res) => {
       return res.redirect('/clients');
     }
 
-    // Получаем заказы клиента
-    const orders = await Order.findByClientId(clientId);
+    // Получаем заказы клиента через Order.findAll
+    const allOrders = await Order.findAll();
+    const orders = allOrders.filter(order => order.client_id === clientId);
     client.orders = orders;
 
-    res.render('client-detail', { client, STATUS_CONFIG, messages: req.flash() });
+    res.render('client-detail', { 
+      client, 
+      STATUS_CONFIG, 
+      messages: { 
+        error: req.flash('error'), 
+        success: req.flash('success') 
+      } 
+    });
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке деталей клиента.');
@@ -96,7 +115,14 @@ router.get('/:id/edit', async (req, res) => {
       return res.redirect('/clients');
     }
 
-    res.render('client-form', { client, STATUS_CONFIG, messages: req.flash() });
+    res.render('client-form', { 
+      client, 
+      STATUS_CONFIG, 
+      messages: { 
+        error: req.flash('error'), 
+        success: req.flash('success') 
+      } 
+    });
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке клиента для редактирования.');
