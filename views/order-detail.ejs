@@ -198,15 +198,15 @@
     <div class="d-flex justify-content-between align-items-start">
       <div class="flex-grow-1">
         <strong class="editable-field" data-field="product_name"><%= item.product_name %></strong>
-        <div class="item-details">
-          <div data-label="Кол-во">
-            <span class="editable-field" data-field="quantity"><%= item.quantity %></span>
+        <div class="item-details mt-2">
+          <div>
+            Кол-во: <span class="editable-field" data-field="quantity"><%= item.quantity %></span>
           </div>
-          <div data-label="Цена">
-            <span class="editable-field" data-field="price"><%= (+item.price).toFixed(2) %></span>
+          <div>
+            Цена: <span class="editable-field" data-field="price"><%= (+item.price).toFixed(2) %></span>
           </div>
-          <div data-label="Сумма">
-            <span class="item-total"><%= (+item.item_total).toFixed(2) %></span>
+          <div>
+            Сумма: <span class="item-total"><%= (+item.item_total).toFixed(2) %></span>
           </div>
         </div>
       </div>
