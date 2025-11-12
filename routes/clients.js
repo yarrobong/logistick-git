@@ -16,7 +16,10 @@ router.get('/', async (req, res) => {
       client.orderCount = clientOrders.length;
       client.lastOrderDate = clientOrders.length > 0 ? clientOrders[0].order_date : null;
     }
-    res.render('clients', { clients, STATUS_CONFIG, messages: req.flash() });
+    res.render('clients', { clients, STATUS_CONFIG, messages: { 
+  error: req.flash('error'), 
+  success: req.flash('success') 
+}});
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке клиентов.');
