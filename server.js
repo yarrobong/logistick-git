@@ -23,6 +23,8 @@ const PORT = process.env.PORT || 3040;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+app.engine('ejs', ejs.renderFile);
+
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
