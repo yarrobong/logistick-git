@@ -147,24 +147,35 @@ h1, h2, h3, h4, h5 {
   }
 }
 
-/* --- НОВОЕ: Для ширины экрана меньше 1000px --- */
+/* Для ширины экрана меньше 1000px */
 @media (max-width: 1000px) {
   .item-details {
-    flex-direction: column;
+    display: flex;
+    flex-direction: column; /* каждый элемент на новой строке */
     align-items: flex-start;
-    max-width: 300px;
+    gap: 0.25rem; 
   }
 
+  /* Каждый блок (Кол-во, Цена, Сумма) в отдельный ряд */
   .item-details div {
-    max-width: 300px;
+    display: flex;
+    flex-direction: row; /* чтобы подпись и input были в одной строке */
     justify-content: flex-start;
-    gap: 0.25rem;
+    gap: 0.5rem;
+    width: 100%;
+    flex-wrap: wrap; /* чтобы input и span не съезжали */
   }
 
+  /* Превращаем подпись в отдельный label через ::before */
   .item-details div::before {
-    max-width: 300px;
     content: attr(data-label) ": ";
     white-space: nowrap;
+  }
+
+  /* Для карточек товаров — выравнивание input и span по ширине */
+  .qty-input, .price-input, .item-total {
+    width: auto; /* минимальная ширина под содержимое */
+    flex: 1; /* растягиваются по возможности */
   }
 }
 </style>
