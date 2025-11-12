@@ -51,6 +51,17 @@ const Client = {
     );
   },
 
+  findByClientId: async (clientId) => {
+  const result = await db.query(`
+    SELECT o.*, c.name as client_name, c.phone as client_phone, c.address as client_address
+    FROM orders o
+    LEFT JOIN clients c ON o.client_id = c.id
+    WHERE o.client_id = $1
+    ORDER BY o.order_date DESC
+  `, [clientId]);
+  return result.rows;
+},
+
   // Удалить клиента (каскадно удалит связанные заказы из-за ON DELETE CASCADE)
   delete: async (id) => {
     await db.query('DELETE FROM clients WHERE id = $1', [id]);
