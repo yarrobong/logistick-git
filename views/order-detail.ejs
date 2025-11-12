@@ -300,21 +300,19 @@
           if(response.item) {
             const serverUpdatedTotal = parseFloat(response.item.item_total).toFixed(2);
             card.querySelector('.item-total').textContent = serverUpdatedTotal;
+          }
+          // Обновляем общую сумму заказа
+          if(response.totalAmount !== undefined) {
+            document.getElementById('totalAmountDisplay').textContent = parseFloat(response.totalAmount).toFixed(2);
           } else {
-            // Пересчитываем на клиенте (это будет происходить и так при input)
-            // Но обновим общую сумму заказа
-            if(response.totalAmount !== undefined) {
-              document.getElementById('totalAmountDisplay').textContent = parseFloat(response.totalAmount).toFixed(2);
-            } else {
-              updateTotals();
-            }
+            updateTotals(); // Резервный пересчёт на клиенте
           }
         } else {
           // Для других полей (например, названия) обновляем общую сумму
           if(response.totalAmount !== undefined) {
             document.getElementById('totalAmountDisplay').textContent = parseFloat(response.totalAmount).toFixed(2);
           } else {
-            updateTotals();
+            updateTotals(); // Резервный пересчёт на клиенте
           }
         }
       } else {
@@ -355,6 +353,9 @@
       const total = qty * price;
 
       totalSpan.textContent = total.toFixed(2);
+
+      // --- НОВОЕ: Обновление общей суммы заказа при вводе ---
+      updateTotals();
     });
 
     // --- НОВАЯ ЛОГИКА: Добавление товара через строку ---
@@ -401,6 +402,8 @@
            const qty = parseFloat(qtyInput.value) || 0;
            const price = parseFloat(priceInput.value) || 0;
            totalSpan.textContent = (qty * price).toFixed(2);
+           // --- НОВОЕ: Обновление общей суммы заказа при вводе в новой карточке ---
+           updateTotals();
          };
          qtyInput.addEventListener('input', recalculateTotal);
          priceInput.addEventListener('input', recalculateTotal);
@@ -463,7 +466,7 @@
       const card = e.target.closest("[data-id]");
       const itemId = card.dataset.id;
       if (!confirm("Удалить позицию?")) return;
-      const res = await fetch(`/orders/${orderId}/items/${itemId}?_method=DELETE`, { method: "POST" });
+      const res = await fetch(`/orders/${orderId}/items/${itemId]?_method=DELETE`, { method: "POST" });
       if (res.ok) {
         card.remove();
         updateTotals();
