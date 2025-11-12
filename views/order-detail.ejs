@@ -466,7 +466,7 @@
       const card = e.target.closest("[data-id]");
       const itemId = card.dataset.id;
       if (!confirm("Удалить позицию?")) return;
-      const res = await fetch(`/orders/${orderId}/items/${itemId]?_method=DELETE`, { method: "POST" });
+      const res = await fetch(`/orders/${orderId}/items/${itemId}?_method=DELETE`, { method: "POST" });
       if (res.ok) {
         card.remove();
         updateTotals();
