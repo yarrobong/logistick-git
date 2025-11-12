@@ -79,13 +79,21 @@ router.get('/:id', async (req, res) => {
   }
 
   try {
-    const client = await Client.findByIdWithOrders(clientId); // используем метод с join
+    // Берем клиента вместе с заказами
+    const client = await Client.findByIdWithOrders(clientId);
     if (!client) {
       req.flash('error', 'Клиент не найден.');
       return res.redirect('/clients');
     }
 
-    res.render('client-detail', { client });
+    // В res.render передаем только данные, без filename
+    res.render('client-detail', { 
+      client, 
+      STATUS_CONFIG: res.locals.STATUS_CONFIG,
+      messages: res.locals.messages,
+      session: req.session
+    });
+
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке деталей клиента.');
