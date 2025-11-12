@@ -6,130 +6,138 @@
   <title><%= order ? `Заказ #${order.id}` : 'Новый Заказ' %></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
    <style>
-    /* Темная тема как в Telegram */
-    body { 
-      background-color: #18222D; /* Очень тёмный фон как в ТГ */
-      color: #ffffff; /* Белый текст */
-    }
+  /* Темная тема как в Telegram */
+  body { 
+    background-color: #18222D; 
+    color: #ffffff; 
+  }
 
-    /* Стили для карточек товаров */
-    .item-card {
-      background-color: #213040; /* Тёмно-серый как в ТГ */
-      border-radius: .5rem;
-      transition: .2s;
-      color: white;
-      margin: 10px;
-    }
-    .item-card:hover { 
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Тёмная тень */
-      border-color: #3a3a3a; /* Более светлая граница при наведении */
-    }
+  /* Стили для карточек товаров */
+  .item-card {
+    background-color: #213040; 
+    border-radius: .5rem;
+    transition: .2s;
+    color: white;
+    padding: 1rem; /* Внутренний отступ */
+  }
+  .item-card:hover { 
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); 
+    border-color: #3a3a3a; 
+  }
 
-    /* Стили для редактируемых полей */
-    .editable-field { 
-      cursor: pointer; 
-      border-bottom: 1px dashed transparent; 
-     
-    }
-    .editable-field:hover { 
-      border-bottom: 1px dashed #85c1ff; 
-    }
+  /* Стили для редактируемых полей */
+  .editable-field { 
+    cursor: pointer; 
+    border-bottom: 1px dashed transparent; 
+    display: inline-block; 
+    min-width: 80px; /* Зарезервированное место под числа/текст */
+    min-height: 1.5em; /* Высота строки */
+    padding: 0.125rem 0.25rem; /* Небольшие отступы внутри */
+    border-radius: 0.25rem; /* Скругление при наведении */
+  }
+  .editable-field:hover { 
+    border-bottom: 1px dashed #85c1ff; 
+    background-color: rgba(133, 193, 255, 0.1); /* Лёгкий фон при наведении */
+  }
 
-    /* Стили для действий с карточкой */
-    .item-actions { 
-      opacity: 0; 
-      transition: .2s; 
-    }
-    .item-card:hover .item-actions { 
-      opacity: 1; 
-    }
+  /* Стили для действий с карточкой */
+  .item-actions { 
+    opacity: 0; 
+    transition: .2s; 
+  }
+  .item-card:hover .item-actions { 
+    opacity: 1; 
+  }
 
-   
+  /* Кнопки */
+  .btn-outline-light {
+    border-color: #3a3a3a; 
+    color: #d0d0d0; 
+    background-color: transparent;
+  }
+  .btn-outline-light:hover {
+    background-color: #3a3a3a; 
+    color: #ffffff; 
+  }
 
-    /* Кнопки */
-    .btn-outline-light {
-      border-color: #3a3a3a; /* Тёмная граница */
-      color: #d0d0d0; /* Светло-серый текст */
-      background-color: transparent;
-    }
-    .btn-outline-light:hover {
-      background-color: #3a3a3a; /* Тёмный фон при наведении */
-      color: #ffffff; /* Белый текст */
-    }
+  .btn-success {
+    background-color: #0088cc; 
+    border-color: #0088cc;
+  }
+  .btn-success:hover {
+    background-color: #0077b3; 
+    border-color: #0077b3;
+  }
 
-    .btn-success {
-      background-color: #0088cc; /* Сине-зелёный как в ТГ */
-      border-color: #0088cc;
-    }
-    .btn-success:hover {
-      background-color: #0077b3; /* Более тёмный */
-      border-color: #0077b3;
-    }
+  .btn-outline-danger {
+    color: #ff3b30; 
+    border-color: #ff3b30;
+  }
+  .btn-outline-danger:hover {
+    background-color: #ff3b30; 
+    color: #ffffff; 
+  }
 
-    .btn-outline-danger {
-      color: #ff3b30; /* Красный как в ТГ */
-      border-color: #ff3b30;
-    }
-    .btn-outline-danger:hover {
-      background-color: #ff3b30; /* Красный фон */
-      color: #ffffff; /* Белый текст */
-    }
+  /* Вводы */
+  .form-control {
+    background-color: #213040; 
+    border: none; 
+    color: #ffffff; 
+    min-width: 80px; /* То же, что и у editable-field */
+    padding: 0.125rem 0.25rem;
+  }
+  .form-control:focus {
+    background-color: #213040;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2rem rgba(133, 193, 255, 0.25); 
+  }
 
-    /* Вводы */
-    .form-control {
-      background-color: #213040; /* Тёмно-серый как в ТГ */
-      border: none; /* Тёмная граница */
-      color: #ffffff; /* Белый текст */
+  /* Заголовки */
+  h1, h2, h3, h4, h5 {
+    color: #ffffff; 
+  }
 
-
-         
-     
-    }
-    .form-control:focus {
-      background-color: #213040;
-      
-      color: #ffffff;
-      box-shadow: 0 0 0 0.2rem rgba(133, 193, 255, 0.25); /* Голубая тень */
-    }
-
-    /* Заголовки */
-    h1, h2, h3, h4, h5 {
-      color: #ffffff; /* Белый */
-    }
-
-    /* --- НОВЫЕ СТИЛИ ДЛЯ ПОЗИЦИЙ --- */
+  /* --- НОВЫЕ СТИЛИ ДЛЯ ПОЗИЦИЙ --- */
   .item-details {
-    
     display: flex;
-    flex-wrap: wrap; /* Перенос на новую строку при необходимости */
-    gap: 0.5rem; /* Отступ между элементами */
-    align-items: center; /* Выравнивание по центру */
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.5rem; /* Отступ сверху */
   }
 
   .item-details div {
     display: flex;
-    align-items: center; /* Выравнивание по центру по вертикали */
-    white-space: nowrap; /* Не переносить текст внутри */
+    align-items: center;
+    white-space: nowrap;
   }
 
-  /* На мобильных устройствах - вертикальный стек */
+  /* На мобильных устройствах */
   @media (max-width: 768px) {
     .item-details {
       flex-direction: column;
       align-items: flex-start; /* Выравнивание по левому краю */
+      gap: 0.25rem; /* Меньше отступов */
     }
 
     .item-details div {
       width: 100%; /* Занимает всю ширину */
-      justify-content: space-between; /* Распределяет элементы по краям */
+      justify-content: flex-start; /* Выравнивание по левому краю */
+      gap: 0.25rem; /* Отступ между текстом и значением */
+    }
+
+    .item-details div::before {
+      content: attr(data-label) ": "; /* Добавляем подпись (например, "Кол-во: ") */
+      white-space: nowrap;
     }
 
     .item-actions {
-      opacity: 1; /* Всегда видно на мобильных */
+      opacity: 1; /* Всегда видно */
       margin-top: 0.5rem; /* Отступ сверху */
+      align-self: flex-end; /* Кнопка справа */
     }
   }
-  </style>
+</style>
 </head>
 <body>
   <%- include('partials/navbar') %>
@@ -186,7 +194,7 @@
       <hr>
       <h2>Товары</h2>
       <div id="itemsContainer">
-        <% if(order.items?.length) { order.items.forEach(item => { %>
+       <% if(order.items?.length) { order.items.forEach(item => { %>
   <div class="card item-card mb-2" data-id="<%= item.id %>">
     <div class="d-flex justify-content-between align-items-start">
       <div class="flex-grow-1">
