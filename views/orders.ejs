@@ -42,10 +42,14 @@
                                     <%= order.status %>
                                 </span>
                             </td>
-                             <td><%= order.total_with_shipping ? (parseFloat(order.total_with_shipping) || 0).toFixed(2) : '0.00' %></td>                             <td>
+                                                             <td>
                                     <a href="/orders/<%= order.id %>" class="btn btn-sm btn-outline-light me-1">Просмотр</a>
                                     <form action="/orders/<%= order.id %>/archive" method="POST" class="d-inline">
                                         <button type="submit" class="btn btn-sm btn-outline-warning me-1" onclick="return confirm('Вы уверены, что хотите архивировать этот заказ?')">Архив</button>
+                                    </form>
+                                    <form action="/orders/<%= order.id %>" method="POST" class="d-inline">
+                                        <input type="hidden" name="_method" value="DELETE">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Вы уверены, что хотите УДАЛИТЬ этот заказ?')">Удалить</button>
                                     </form>
                                 </td>
                             </tr>
