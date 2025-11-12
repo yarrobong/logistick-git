@@ -48,12 +48,23 @@ router.get('/:id', async (req, res) => {
       return res.redirect('/clients');
     }
 
-    res.render('client-detail', {
+    // ЗДЕСЬ ВСТАВЛЯЕМ renderFile
+    const filePath = path.join(__dirname, '../views/client-detail.ejs');
+
+    ejs.renderFile(filePath, {
       client,
       STATUS_CONFIG: res.locals.STATUS_CONFIG,
       messages: res.locals.messages,
       session: req.session
+    }, { async: true }, (err, str) => {
+      if (err) {
+        console.error(err);
+        req.flash('error', 'Ошибка при рендеринге клиента.');
+        return res.redirect('/clients');
+      }
+      res.send(str);
     });
+
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке деталей клиента.');
