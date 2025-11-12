@@ -67,7 +67,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /clients/:id - детали клиента
+
 // GET /clients/:id - детали клиента
 router.get('/:id', async (req, res) => {
   const clientId = parseInt(req.params.id, 10);
