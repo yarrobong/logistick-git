@@ -1,89 +1,73 @@
-// server.js
 const express = require('express');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const flash = require('connect-flash');
-const methodOverride = require('method-override'); // Импортируем method-override
+const methodOverride = require('method-override');
 const ejs = require('ejs');
 const path = require('path');
 const STATUS_CONFIG = require('./config/statuses');
 
-app.use((req, res, next) => {
-  res.locals.session = req.session;
-  next();
-});
-
-// Импорты маршрутов и middleware
+// Импорт маршрутов и middleware
 const authRoutes = require('./routes/auth');
 const orderRoutes = require('./routes/orders');
 const clientRoutes = require('./routes/clients');
 const authMiddleware = require('./middleware/auth');
 
 // Импортируем Pool из config/database.js
-const dbPool = require('./config/database'); // Теперь это Pool
+const dbPool = require('./config/database');
 
-const app = express();
+const app = express(); // <-- нужно объявить ДО app.use
 const PORT = process.env.PORT || 3040;
 
-// Настройка EJS как шаблонизатора
+// Настройка EJS
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Middleware
-app.use(express.urlencoded({ extended: true })); // Парсит URL-encoded тела (например, формы)
-app.use(express.json()); // Парсит JSON тела
-app.use(methodOverride('_method')); // Должен идти после парсинга тела
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')));
-
-// ... остальные middleware и маршруты ...
 
 // Настройка сессии
 app.use(session({
   store: new pgSession({
-    pool: dbPool, // Передаем Pool
-    tableName: 'session' // Имя таблицы для хранения сессий (по умолчанию 'session')
+    pool: dbPool,
+    tableName: 'session'
   }),
-  secret: 'your_secret_key_here', // Замените на случайный секретный ключ
+  secret: 'your_secret_key_here',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // Установите в true, если используете HTTPS
-    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 дней в миллисекундах (опционально)
+    secure: false,
+    maxAge: 30 * 24 * 60 * 60 * 1000
   }
 }));
 
 app.use(flash());
 
-// Установка переменной для проверки аутентификации в шаблонах
+// Теперь можно использовать app.use
 app.use((req, res, next) => {
+  res.locals.session = req.session;
   res.locals.messages = {
     error: req.flash('error'),
     success: req.flash('success')
   };
   res.locals.isAuthenticated = req.session.isLoggedIn;
-  res.locals.STATUS_CONFIG = STATUS_CONFIG; // Делаем статусы доступными в шаблонах
+  res.locals.STATUS_CONFIG = STATUS_CONFIG;
   next();
 });
 
 // Маршруты
 app.use('/', authRoutes);
 app.use('/orders', authMiddleware, orderRoutes);
-app.use('/clients', authMiddleware, clientRoutes); // Пока закомментировано
+app.use('/clients', authMiddleware, clientRoutes);
 
-// Корневой маршрут - перенаправляем на /orders после аутентификации
-app.get('/', authMiddleware, (req, res) => {
-  res.redirect('/orders');
-});
+app.get('/', authMiddleware, (req, res) => res.redirect('/orders'));
+app.get('/dashboard', authMiddleware, (req, res) => res.redirect('/orders'));
 
-// Старая страница дашборда - тоже перенаправляем
-app.get('/dashboard', authMiddleware, (req, res) => {
-  res.redirect('/orders');
-});
-
-// Обработка 404
-app.use((req, res) => {
-  res.status(404).render('404');
-});
+// 404
+app.use((req, res) => res.status(404).render('404'));
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
