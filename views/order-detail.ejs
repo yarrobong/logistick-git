@@ -190,7 +190,6 @@ h1, h2, h3, h4, h5 {
   <%- include('partials/navbar') %>
   <div class="container mt-4">
     <h1><%= order ? `Заказ #${order.id}` : 'Новый Заказ' %></h1>
-
     <form id="orderForm" action="<%= order ? `/orders/${order.id}` : '/orders' %>" method="POST">
       <% if(order) { %><input type="hidden" name="_method" value="PUT"><% } %>
 
@@ -288,9 +287,11 @@ h1, h2, h3, h4, h5 {
   <% } %>
 </div>
 
-      <button class="btn btn-outline-light mt-2" id="addItemBtn">+ Добавить позицию</button>
-      <div class="d-flex justify-content-end mt-3">
-        <h5>Итого: <span id="totalAmountDisplay"><%= (+order.total_amount).toFixed(2) %></span></h5>
+       <button class="btn btn-outline-light mt-2" id="addItemBtn">+ Добавить позицию</button>
+      <div class="d-flex flex-column align-items-end mt-3"> <!-- Изменено: flex-column и align-items-end -->
+        <div>Итого: <span id="totalAmountDisplay"><%= (+order.total_amount).toFixed(2) %></span></div>
+        <div>Доставка: <span id="totalShippingDisplay"><%= ((+order.shipping_cost_china_moscow || 0) + (+order.shipping_cost_moscow_destination || 0)).toFixed(2) %></span></div> <!-- НОВОЕ -->
+        <h5>Всего: <span id="grandTotalDisplay"><%= ((+order.total_amount || 0) + (+order.shipping_cost_china_moscow || 0) + (+order.shipping_cost_moscow_destination || 0)).toFixed(2) %></span></h5> <!-- НОВОЕ -->
       </div>
     <% } %>
   </div>
@@ -541,6 +542,15 @@ h1, h2, h3, h4, h5 {
       const totals = [...document.querySelectorAll(".item-total")];
       const sum = totals.reduce((acc, t) => acc + (+t.textContent || 0), 0);
       document.getElementById('totalAmountDisplay').textContent = sum.toFixed(2);
+
+      // --- НОВОЕ: Обновление общей доставки и итога ---
+      const shipping1 = parseFloat(document.getElementById('ship1')?.value || 0);
+      const shipping2 = parseFloat(document.getElementById('ship2')?.value || 0);
+      const totalShipping = shipping1 + shipping2;
+      document.getElementById('totalShippingDisplay').textContent = totalShipping.toFixed(2);
+
+      const grandTotal = sum + totalShipping;
+      document.getElementById('grandTotalDisplay').textContent = grandTotal.toFixed(2);
     }
   });
 </script>
