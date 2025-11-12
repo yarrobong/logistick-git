@@ -63,12 +63,21 @@
                                 <p class="order-id mb-2">
     <% if (order.intermediary_moscow_destination) { %>
         <%= order.intermediary_moscow_destination %> - 
+        <% if (order.tracking_number_moscow_destination) { %>
+            <%= order.tracking_number_moscow_destination %>
+        <% } else { %>
+            № трека: не указан
+        <% } %>
     <% } else if (order.intermediary_china_moscow) { %>
         <%= order.intermediary_china_moscow %> - 
+        <% if (order.tracking_number_china_moscow) { %>
+            <%= order.tracking_number_china_moscow %>
+        <% } else { %>
+            № трека: не указан
+        <% } %>
     <% } else { %>
-        Посредник: не указан - 
+        Посредник: не указан - № трека: не указан
     <% } %>
-    №<%= order.tracking_number_china_moscow %>
 </p>
 
                                 <!-- Дополнительная информация -->
