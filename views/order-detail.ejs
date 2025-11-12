@@ -201,34 +201,47 @@
       <a href="/orders" class="btn btn-secondary mt-3">Назад</a>
 
       <hr>
-      <h2>Товары</h2>
-      <div id="itemsContainer">
-       <% if(order.items?.length) { order.items.forEach(item => { %>
-  <div class="card item-card mb-2" data-id="<%= item.id %>">
-    <div class="d-flex justify-content-between align-items-center">
-      <div class="flex-grow-1">
-        <strong class="editable-field" data-field="product_name"><%= item.product_name %></strong>
-        <div class="item-details mt-2">
+     <h2>Товары</h2>
+<div id="itemsContainer">
+  <% if(order.items?.length) { order.items.forEach(item => { %>
+    <div class="card item-card mb-2" data-id="<%= item.id %>">
+      <div class="d-flex justify-content-between align-items-start"> <!-- align-items-start -->
+        <div class="flex-grow-1">
+          <input type="text" class="form-control form-control-sm mb-2 product-name-input" 
+                 value="<%= item.product_name %>" 
+                 data-field="product_name" 
+                 data-item-id="<%= item.id %>" 
+                 placeholder="Название товара">
           <div>
-            Кол-во: <span class="editable-field" data-field="quantity"><%= item.quantity %></span>
-          </div>
-          <div>
-            Цена: <span class="editable-field" data-field="price"><%= (+item.price).toFixed(2) %></span>
-          </div>
-          <div>
+            Кол-во:
+            <input type="number" class="form-control form-control-sm d-inline w-auto me-2 qty-input" 
+                   style="width: 80px;" 
+                   value="<%= item.quantity %>" 
+                   min="1" 
+                   data-field="quantity" 
+                   data-item-id="<%= item.id %>" 
+                   placeholder="1">
+            Цена:
+            <input type="number" class="form-control form-control-sm d-inline w-auto me-2 price-input" 
+                   style="width: 100px;" 
+                   value="<%= (+item.price).toFixed(2) %>" 
+                   step="0.01" 
+                   min="0" 
+                   data-field="price" 
+                   data-item-id="<%= item.id %>" 
+                   placeholder="0.00">
             Сумма: <span class="item-total"><%= (+item.item_total).toFixed(2) %></span>
           </div>
         </div>
-      </div>
-      <div class="item-actions">
-        <button class="btn btn-sm btn-outline-danger delete-item">×</button>
+        <div class="item-actions">
+          <button class="btn btn-sm btn-outline-danger delete-item">×</button>
+        </div>
       </div>
     </div>
-  </div>
-<% }) } else { %>
-  <p>Нет товаров</p>
-<% } %>
-      </div>
+  <% }) } else { %>
+    <p>Нет товаров</p>
+  <% } %>
+</div>
 
       <button class="btn btn-outline-light mt-2" id="addItemBtn">+ Добавить позицию</button>
       <div class="d-flex justify-content-end mt-3">
@@ -252,57 +265,78 @@
       };
     }
 
-    // Inline редактирование
-    document.body.addEventListener("click", e => {
-      if (!e.target.classList.contains("editable-field")) return;
-      const span = e.target;
-      const field = span.dataset.field;
-      const parent = span.closest("[data-id]");
-      const itemId = parent.dataset.id;
-      const input = document.createElement("input");
-      input.type = (field === "quantity" || field === "price") ? "number" : "text";
-      input.step = (field === "quantity" || field === "price") ? "0.01" : undefined;
-      input.min = (field === "quantity") ? "1" : (field === "price") ? "0" : undefined;
-      input.value = span.textContent.trim();
-      input.className = "form-control form-control-sm d-inline w-auto";
-      span.replaceWith(input);
-      input.focus();
+    // --- НОВАЯ ЛОГИКА: Обработка изменений в input'ах ---
+    // Обработчик потери фокуса для всех input'ов
+    document.body.addEventListener('blur', async (e) => {
+      if (!e.target.matches('input[data-field][data-item-id]')) return;
 
-      input.addEventListener("blur", async () => {
-        const newValue = input.value.trim();
-        const response = await updateItem(itemId, field, newValue);
-        if(response && response.success) {
-          span.textContent = newValue;
-          input.replaceWith(span);
+      const input = e.target;
+      const field = input.dataset.field;
+      const itemId = input.dataset.itemId;
+      const newValue = input.value.trim();
 
-          if(field === 'quantity' || field === 'price') {
-            if(response.item) {
-              const serverUpdatedTotal = parseFloat(response.item.item_total).toFixed(2);
-              parent.querySelector('.item-total').textContent = serverUpdatedTotal;
-            } else {
-              const qtySpan = parent.querySelector('[data-field="quantity"]');
-              const priceSpan = parent.querySelector('[data-field="price"]');
-              const currentQty = field === 'quantity' ? newValue : (qtySpan.textContent || 1);
-              const currentPrice = field === 'price' ? newValue : (priceSpan.textContent || 0);
-              const total = parseFloat(currentQty) * parseFloat(currentPrice);
-              parent.querySelector('.item-total').textContent = total.toFixed(2);
-            }
-          }
-
-          if(response.totalAmount !== undefined) {
-            document.getElementById('totalAmountDisplay').textContent = parseFloat(response.totalAmount).toFixed(2);
-          } else {
-            updateTotals();
-          }
-        } else {
-           alert("Ошибка обновления");
-           input.replaceWith(span);
+      // Валидация
+      if (field === 'quantity' || field === 'price') {
+        const numValue = parseFloat(newValue);
+        if (isNaN(numValue) || (field === 'quantity' && numValue < 1) || (field === 'price' && numValue < 0)) {
+          alert(`Некорректное значение для ${field === 'quantity' ? 'количества' : 'цены'}`);
+          input.focus();
+          return;
         }
-      });
+      }
 
-      input.addEventListener("keydown", ev => {
-        if (ev.key === "Enter") input.blur();
-      });
+      if (field === 'product_name' && !newValue) {
+        alert('Название товара не может быть пустым');
+        input.focus();
+        return;
+      }
+
+      // Отправляем обновление
+      const response = await updateItem(itemId, field, newValue);
+      if(response && response.success) {
+        // Обновляем сумму, если изменили кол-во или цену
+        if(field === 'quantity' || field === 'price') {
+          const card = input.closest("[data-id]");
+          if(response.item) {
+            const serverUpdatedTotal = parseFloat(response.item.item_total).toFixed(2);
+            card.querySelector('.item-total').textContent = serverUpdatedTotal;
+          } else {
+            // Пересчитываем на клиенте
+            const qtyInput = card.querySelector('.qty-input');
+            const priceInput = card.querySelector('.price-input');
+            const currentQty = parseFloat(qtyInput.value) || 0;
+            const currentPrice = parseFloat(priceInput.value) || 0;
+            const total = currentQty * currentPrice;
+            card.querySelector('.item-total').textContent = total.toFixed(2);
+          }
+        }
+
+        // Обновляем общую сумму заказа
+        if(response.totalAmount !== undefined) {
+          document.getElementById('totalAmountDisplay').textContent = parseFloat(response.totalAmount).toFixed(2);
+        } else {
+          updateTotals();
+        }
+      } else {
+        alert("Ошибка обновления");
+        // Восстанавливаем старое значение
+        const originalValue = input.getAttribute('data-original-value');
+        if(originalValue) input.value = originalValue;
+      }
+    }, true); // Используем capturing phase для корректной работы с input
+
+    // Сохраняем оригинальное значение при фокусе
+    document.body.addEventListener('focus', (e) => {
+      if (e.target.matches('input[data-field][data-item-id]')) {
+        e.target.setAttribute('data-original-value', e.target.value);
+      }
+    }, true);
+
+    // Обработка Enter в input'ах
+    document.body.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.matches('input[data-field][data-item-id]')) {
+        e.target.blur(); // Триггерим обновление
+      }
     });
 
     // --- НОВАЯ ЛОГИКА: Добавление товара через строку ---
@@ -405,7 +439,7 @@
        };
     }
 
-    // Удаление товара (существующий код)
+    // Удаление товара
     document.body.addEventListener("click", async e => {
       if (!e.target.classList.contains("delete-item")) return;
       const card = e.target.closest("[data-id]");
