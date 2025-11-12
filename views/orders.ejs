@@ -60,17 +60,16 @@
                                 <!-- Город -->
                                 <p class="card-text mb-1"><%= order.destination_city || 'N/A' %></p>
                                 
-                                <!-- Посредник и ID -->
                                 <p class="order-id mb-2">
-                                    <% if (order.intermediary_china_moscow) { %>
-                                        <%= order.intermediary_china_moscow %> - 
-                                    <% } else if (order.intermediary_china_moscow ) { %>
-                                        <%= order.intermediary_china_moscow %> - 
-                                    <% } else { %>
-                                        Посредник: не указан - 
-                                    <% } %>
-                                    №<%= order.tracking_number_china_moscow %>
-                                </p>
+    <% if (order.intermediary_moscow_destination) { %>
+        <%= order.intermediary_moscow_destination %> - 
+    <% } else if (order.intermediary_china_moscow) { %>
+        <%= order.intermediary_china_moscow %> - 
+    <% } else { %>
+        Посредник: не указан - 
+    <% } %>
+    №<%= order.tracking_number_china_moscow %>
+</p>
 
                                 <!-- Дополнительная информация -->
                                 <div class="order-details mt-auto">
