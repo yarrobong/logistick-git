@@ -220,6 +220,7 @@
 
                 if (deleteBtn) {
                     deleteBtn.addEventListener('click', function() {
+                         console.log("Кнопка удаления нажата!");
                         if (confirm('Вы уверены, что хотите УДАЛИТЬ этот заказ?')) {
                             fetch(`/orders/${orderId}`, {
                                 method: 'POST',

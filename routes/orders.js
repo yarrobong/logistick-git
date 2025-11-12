@@ -274,6 +274,7 @@ router.delete('/:orderId/items/:itemId', async (req, res) => {
 
 // DELETE /orders/:id - удалить заказ
 router.delete('/:id', async (req, res) => {
+    console.log("DEBUG DELETE /:id"); // <-- Добавьте это для проверки
   const orderId = parseInt(req.params.id, 10);
 
   if (isNaN(orderId)) {
