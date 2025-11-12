@@ -84,7 +84,6 @@
     border: none; 
     color: #ffffff; 
     min-width: 80px; /* То же, что и у editable-field */
-    padding: 0.125rem 0.25rem;
   }
   .form-control:focus {
     background-color: #213040;
@@ -199,15 +198,15 @@
     <div class="d-flex justify-content-between align-items-start">
       <div class="flex-grow-1">
         <strong class="editable-field" data-field="product_name"><%= item.product_name %></strong>
-        <div class="item-details mt-2">
-          <div>
-            Кол-во: <span class="editable-field" data-field="quantity"><%= item.quantity %></span>
+        <div class="item-details">
+          <div data-label="Кол-во">
+            <span class="editable-field" data-field="quantity"><%= item.quantity %></span>
           </div>
-          <div>
-            Цена: <span class="editable-field" data-field="price"><%= (+item.price).toFixed(2) %></span>
+          <div data-label="Цена">
+            <span class="editable-field" data-field="price"><%= (+item.price).toFixed(2) %></span>
           </div>
-          <div>
-            Сумма: <span class="item-total"><%= (+item.item_total).toFixed(2) %></span>
+          <div data-label="Сумма">
+            <span class="item-total"><%= (+item.item_total).toFixed(2) %></span>
           </div>
         </div>
       </div>
