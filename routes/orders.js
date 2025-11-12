@@ -30,13 +30,11 @@ router.get('/new', async (req, res) => {
 
 // POST /orders - создать новый заказ
 router.post('/', async (req, res) => {
-  // ДОБАВЬТЕ orderDate СЮДА
-  const { clientName, clientPhone, destinationCity, status, orderDate, // <-- orderDate добавлено
+  const { clientName, clientPhone, destinationCity, status, orderDate,
           shippingCostChinaMoscow, shippingCostMoscowDestination,
           intermediaryChinaMoscow, trackingNumberChinaMoscow,
           intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
 
-  // --- ДОБАВЬТЕ ЭТУ СТРОКУ ---
   console.log('DEBUG POST /: req.body.orderDate =', orderDate, 'Type:', typeof orderDate);
 
   // Проверяем, что имя клиента введено
@@ -53,7 +51,7 @@ router.post('/', async (req, res) => {
   try {
     let clientId = null;
 
-    // Если мы редактируем заказ (clientId передан скрытым полем), используем его
+    // Если clientId передан скрытым полем (редактирование), используем его
     if (req.body.clientId) {
         clientId = parseInt(req.body.clientId, 10);
         // Обновим данные клиента, если они изменились
@@ -79,7 +77,7 @@ router.post('/', async (req, res) => {
 
     // Используем два новых поля для стоимости доставки
     const orderId = await Order.create(clientId, destinationCity, status, orderDate,
-                                      shippingCostChinaMoscow, shippingCostMoscowDestination, // Передаём два значения
+                                      shippingCostChinaMoscow, shippingCostMoscowDestination,
                                       intermediaryChinaMoscow, trackingNumberChinaMoscow,
                                       intermediaryMoscowDestination, trackingNumberMoscowDestination);
     req.flash('success', 'Заказ успешно создан.');
@@ -108,8 +106,6 @@ router.get('/:id', async (req, res) => {
     }
     const clients = await Client.findAll(); // Получаем список клиентов для выпадающего списка при редактировании
 
-
-
     res.render('order-detail', { order, clients, isEditing: true });
   } catch (err) {
     console.error(err);
@@ -118,10 +114,35 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// DELETE /orders/:id - удалить заказ
+// ПЕРЕМЕЩЁН ВЫШЕ, чтобы избежать конфликта с router.post('/:id')
+router.delete('/:id', async (req, res) => {
+    console.log("DEBUG DELETE /:id"); // <-- Лог для проверки вызова DELETE
+  const orderId = parseInt(req.params.id, 10);
+
+  if (isNaN(orderId)) {
+    req.flash('error', 'Неверный ID заказа.');
+    return res.status(400).send('Bad Request');
+  }
+
+  try {
+    await Order.delete(orderId); // Вызываем метод delete из модели
+    req.flash('success', 'Заказ успешно удален.');
+    // Важно: выполнить только ОДИН ответ
+    res.redirect('/orders'); // Перенаправляем на список после удаления
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Ошибка при удалении заказа.');
+    res.redirect('/orders'); // Перенаправляем обратно со flash-сообщением об ошибке
+  }
+  // Удаляем строку res.redirect('/orders'); за пределами catch
+});
+
 // PUT /orders/:id - обновить заказ (используем POST с _method=PUT)
+// ПЕРЕМЕЩЁН НИЖЕ, чтобы избежать конфликта с router.delete('/:id')
 router.post('/:id', async (req, res) => {
   const orderId = parseInt(req.params.id, 10);
-  const { clientName, clientPhone, destinationCity, status, orderDate, // <-- orderDate есть
+  const { clientName, clientPhone, destinationCity, status, orderDate,
           shippingCostChinaMoscow, shippingCostMoscowDestination,
           intermediaryChinaMoscow, trackingNumberChinaMoscow,
           intermediaryMoscowDestination, trackingNumberMoscowDestination } = req.body;
@@ -173,7 +194,7 @@ router.post('/:id', async (req, res) => {
 
     // Используем два новых поля для стоимости доставки
     await Order.update(orderId, clientId, destinationCity, status, orderDate,
-                       shippingCostChinaMoscow, shippingCostMoscowDestination, // Передаём два значения
+                       shippingCostChinaMoscow, shippingCostMoscowDestination,
                        intermediaryChinaMoscow, trackingNumberChinaMoscow,
                        intermediaryMoscowDestination, trackingNumberMoscowDestination);
     req.flash('success', 'Заказ успешно обновлен.');
@@ -184,9 +205,6 @@ router.post('/:id', async (req, res) => {
     res.redirect(`/orders/${orderId}`);
   }
 });
-
-
-
 
 // POST /orders/:id/archive - архивировать заказ
 router.post('/:id/archive', async (req, res) => {
@@ -271,32 +289,5 @@ router.delete('/:orderId/items/:itemId', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
-// DELETE /orders/:id - удалить заказ
-router.delete('/:id', async (req, res) => {
-    console.log("DEBUG DELETE /:id"); // <-- Добавьте это для проверки
-  const orderId = parseInt(req.params.id, 10);
-
-  if (isNaN(orderId)) {
-    req.flash('error', 'Неверный ID заказа.');
-    return res.status(400).send('Bad Request');
-  }
-
-  try {
-    await Order.delete(orderId); // Вызываем метод delete из модели
-    req.flash('success', 'Заказ успешно удален.');
-    // Важно: выполнить только ОДИН ответ
-    // res.status(200).send('OK'); // Это для AJAX
-    res.redirect('/orders'); // Это для обычной формы
-  } catch (err) {
-    console.error(err);
-    req.flash('error', 'Ошибка при удалении заказа.');
-    // Важно: выполнить только ОДИН ответ
-    // res.status(500).send('Internal Server Error'); // Это для AJAX
-    res.redirect('/orders'); // Это для обычной формы с flash-сообщением об ошибке
-  }
-  // Удаляем строку res.redirect('/orders'); за пределами catch
-});
-
 
 module.exports = router;
