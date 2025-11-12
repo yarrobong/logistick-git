@@ -185,29 +185,7 @@ router.post('/:id', async (req, res) => {
   }
 });
 
-// DELETE /orders/:id - удалить заказ
-router.delete('/:id', async (req, res) => {
-  const orderId = parseInt(req.params.id, 10);
 
-  if (isNaN(orderId)) {
-    req.flash('error', 'Неверный ID заказа.');
-    return res.status(400).send('Bad Request');
-  }
-
-  try {
-    await Order.delete(orderId); // Вызываем метод delete из модели
-    req.flash('success', 'Заказ успешно удален.');
-    res.status(200).send('OK'); // Ответ для AJAX, если используется
-    // Или редирект, если кнопка не AJAX:
-    // res.redirect('/orders'); // Раскомментируйте, если хотите редирект
-  } catch (err) {
-    console.error(err);
-    req.flash('error', 'Ошибка при удалении заказа.');
-    res.status(500).send('Internal Server Error');
-    // Или редирект с ошибкой:
-    // res.redirect('/orders'); // Раскомментируйте, если хотите редирект
-  }
-});
 
 
 // POST /orders/:id/archive - архивировать заказ
@@ -291,6 +269,30 @@ router.delete('/:orderId/items/:itemId', async (req, res) => {
     console.error(err);
     req.flash('error', 'Ошибка при удалении товара.');
     res.status(500).send('Internal Server Error');
+  }
+});
+
+// DELETE /orders/:id - удалить заказ
+router.delete('/:id', async (req, res) => {
+  const orderId = parseInt(req.params.id, 10);
+
+  if (isNaN(orderId)) {
+    req.flash('error', 'Неверный ID заказа.');
+    return res.status(400).send('Bad Request');
+  }
+
+  try {
+    await Order.delete(orderId); // Вызываем метод delete из модели
+    req.flash('success', 'Заказ успешно удален.');
+    res.status(200).send('OK'); // Ответ для AJAX, если используется
+    // Или редирект, если кнопка не AJAX:
+    // res.redirect('/orders'); // Раскомментируйте, если хотите редирект
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Ошибка при удалении заказа.');
+    res.status(500).send('Internal Server Error');
+    // Или редирект с ошибкой:
+    // res.redirect('/orders'); // Раскомментируйте, если хотите редирект
   }
 });
 
