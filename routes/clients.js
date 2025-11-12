@@ -1,29 +1,40 @@
 // routes/clients.js
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+
 const Client = require('../models/Client');
 const Order = require('../models/Order');
 const STATUS_CONFIG = require('../config/statuses');
 
-// GET /clients - отобразить список всех клиентов
+// Функция для подготовки данных для шаблона
+function renderClientDetail(res, view, data) {
+  res.render(view, {
+    ...data,
+    STATUS_CONFIG,
+    messages: {
+      error: res.locals.messages?.error || [],
+      success: res.locals.messages?.success || []
+    },
+    session: res.locals.session || {},
+    filename: path.join(__dirname, `../views/${view}.ejs`) // важно для include
+  });
+}
+
+// GET /clients - список всех клиентов
 router.get('/', async (req, res) => {
   try {
     const clients = await Client.findAll();
+    
+    // Добавляем количество заказов и дату последнего заказа
     for (let client of clients) {
-      // Используем Order.findAll и фильтруем на клиенте
       const allOrders = await Order.findAll();
       const clientOrders = allOrders.filter(order => order.client_id === client.id);
       client.orderCount = clientOrders.length;
       client.lastOrderDate = clientOrders.length > 0 ? clientOrders[0].order_date : null;
     }
-    res.render('clients', { 
-      clients, 
-      STATUS_CONFIG, 
-      messages: { 
-        error: req.flash('error'), 
-        success: req.flash('success') 
-      } 
-    });
+
+    renderClientDetail(res, 'clients', { clients });
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке клиентов.');
@@ -31,16 +42,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /clients/new - отобразить форму для создания нового клиента
+// GET /clients/new - форма создания нового клиента
 router.get('/new', (req, res) => {
-  res.render('client-form', { 
-    client: null, 
-    STATUS_CONFIG, 
-    messages: { 
-      error: req.flash('error'), 
-      success: req.flash('success') 
-    } 
-  });
+  renderClientDetail(res, 'client-form', { client: null });
 });
 
 // POST /clients - создать нового клиента
@@ -63,7 +67,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /clients/:id - отобразить детали конкретного клиента
+// GET /clients/:id - детали клиента
 router.get('/:id', async (req, res) => {
   const clientId = parseInt(req.params.id, 10);
 
@@ -79,19 +83,11 @@ router.get('/:id', async (req, res) => {
       return res.redirect('/clients');
     }
 
-    // Получаем заказы клиента через Order.findAll
+    // Заказы клиента
     const allOrders = await Order.findAll();
-    const orders = allOrders.filter(order => order.client_id === clientId);
-    client.orders = orders;
+    client.orders = allOrders.filter(order => order.client_id === clientId);
 
-    res.render('client-detail', { 
-      client, 
-      STATUS_CONFIG, 
-      messages: { 
-        error: req.flash('error'), 
-        success: req.flash('success') 
-      } 
-    });
+    renderClientDetail(res, 'client-detail', { client });
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке деталей клиента.');
@@ -99,7 +95,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// GET /clients/:id/edit - отобразить форму для редактирования клиента
+// GET /clients/:id/edit - форма редактирования
 router.get('/:id/edit', async (req, res) => {
   const clientId = parseInt(req.params.id, 10);
 
@@ -115,14 +111,7 @@ router.get('/:id/edit', async (req, res) => {
       return res.redirect('/clients');
     }
 
-    res.render('client-form', { 
-      client, 
-      STATUS_CONFIG, 
-      messages: { 
-        error: req.flash('error'), 
-        success: req.flash('success') 
-      } 
-    });
+    renderClientDetail(res, 'client-form', { client });
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке клиента для редактирования.');
@@ -130,7 +119,7 @@ router.get('/:id/edit', async (req, res) => {
   }
 });
 
-// POST /clients/:id - обновить клиента (используем POST с _method=PUT)
+// POST /clients/:id - обновление клиента (с _method=PUT)
 router.post('/:id', async (req, res) => {
   const clientId = parseInt(req.params.id, 10);
   const { name, phone, address } = req.body;
