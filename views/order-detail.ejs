@@ -152,15 +152,17 @@ h1, h2, h3, h4, h5 {
   .item-details {
     flex-direction: column;
     align-items: flex-start;
+    max-width: 300px;
   }
 
   .item-details div {
-    width: 100%;
+    max-width: 300px;
     justify-content: flex-start;
     gap: 0.25rem;
   }
 
   .item-details div::before {
+    max-width: 300px;
     content: attr(data-label) ": ";
     white-space: nowrap;
   }
