@@ -68,6 +68,7 @@ router.post('/', async (req, res) => {
 });
 
 // GET /clients/:id - детали клиента
+// GET /clients/:id - детали клиента
 router.get('/:id', async (req, res) => {
   const clientId = parseInt(req.params.id, 10);
 
@@ -83,11 +84,26 @@ router.get('/:id', async (req, res) => {
       return res.redirect('/clients');
     }
 
-    // Заказы клиента
+    // Получаем заказы клиента
     const allOrders = await Order.findAll();
     client.orders = allOrders.filter(order => order.client_id === clientId);
 
-    renderClientDetail(res, 'client-detail', { client });
+    // Вот ключевой момент: filename передается в **опциях**, а не в данных
+    res.render(
+      'client-detail', // шаблон
+      { 
+        client,
+        STATUS_CONFIG,
+        messages: { 
+          error: req.flash('error'), 
+          success: req.flash('success') 
+        },
+        session: req.session
+      },
+      {
+        filename: path.join(__dirname, '../views/client-detail.ejs') // <-- обязательно для include
+      }
+    );
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке деталей клиента.');
