@@ -64,8 +64,8 @@
                                 <p class="order-id mb-2">
                                     <% if (order.intermediary_china_moscow) { %>
                                         <%= order.intermediary_china_moscow %> - 
-                                    <% } else if (tracking_number_china_moscow ) { %>
-                                        <%= tracking_number_china_moscow  %> - 
+                                    <% } else if (order.tracking_number_china_moscow ) { %>
+                                        <%= order.tracking_number_china_moscow %> - 
                                     <% } else { %>
                                         Посредник: не указан - 
                                     <% } %>
