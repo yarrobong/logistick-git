@@ -5,20 +5,89 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= order ? `Заказ #${order.id}` : 'Новый Заказ' %></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body { background-color: #212529; color: #fff; }
-    .item-card {
-      background-color: #2d3238;
-      border-radius: .5rem;
-      border: 1px solid rgba(255,255,255,.1);
-      transition: .2s;
-      color: white;
+   <style>
+    /* Цвета фона и текста */
+    body { 
+      background-color: #1e1e2e; /* Темно-серый с фиолетовым оттенком */
+      color: #e0e0f0; /* Светло-серый с синеватым оттенком */
     }
-    .item-card:hover { box-shadow: 0 0 10px rgba(0,0,0,.4); }
-    .editable-field { cursor: pointer; border-bottom: 1px dashed transparent; }
-    .editable-field:hover { border-bottom: 1px dashed #86b7fe; }
-    .item-actions { opacity: 0; transition: .2s; }
-    .item-card:hover .item-actions { opacity: 1; }
+
+    /* Стили для карточек товаров */
+    .item-card {
+      background-color: #2d2d44; /* Темно-фиолетовый */
+      border: 1px solid #4a4a6a; /* Более светлая граница */
+      border-radius: .5rem;
+      transition: .2s;
+    }
+    .item-card:hover { 
+      box-shadow: 0 0 10px rgba(100, 100, 200, 0.3); /* Светло-фиолетовая тень при наведении */
+      border-color: #6a6a9f; /* Более яркая граница при наведении */
+    }
+
+    /* Стили для редактируемых полей */
+    .editable-field { 
+      cursor: pointer; 
+      border-bottom: 1px dashed transparent; 
+      color: #a3bffa; /* Светло-голубой цвет для редактируемых полей */
+    }
+    .editable-field:hover { 
+      border-bottom: 1px dashed #86b7fe; 
+    }
+
+    /* Стили для действий с карточкой */
+    .item-actions { 
+      opacity: 0; 
+      transition: .2s; 
+    }
+    .item-card:hover .item-actions { 
+      opacity: 1; 
+    }
+
+    /* Кнопки */
+    .btn-outline-light {
+      border-color: #6a6a9f; /* Цвет границы */
+      color: #d0d0f0; /* Цвет текста */
+    }
+    .btn-outline-light:hover {
+      background-color: #6a6a9f; /* Цвет фона при наведении */
+      color: #ffffff; /* Цвет текста при наведении */
+    }
+
+    .btn-success {
+      background-color: #4caf8b; /* Темно-зелёный */
+      border-color: #4caf8b;
+    }
+    .btn-success:hover {
+      background-color: #3d8b6d; /* Более темный зелёный */
+      border-color: #3d8b6d;
+    }
+
+    .btn-outline-danger {
+      color: #f57c7c; /* Светло-красный */
+      border-color: #f57c7c;
+    }
+    .btn-outline-danger:hover {
+      background-color: #f57c7c; /* Красный фон */
+      color: #ffffff; /* Белый текст */
+    }
+
+    /* Вводы */
+    .form-control {
+      background-color: #3a3a5a; /* Темно-серый фон для полей ввода */
+      border: 1px solid #5a5a7a; /* Средне-серая граница */
+      color: #e0e0f0; /* Цвет текста */
+    }
+    .form-control:focus {
+      background-color: #3a3a5a;
+      border-color: #86b7fe; /* Светло-синяя граница при фокусе */
+      color: #ffffff;
+      box-shadow: 0 0 0 0.2rem rgba(134, 183, 254, 0.25); /* Светло-синяя тень */
+    }
+
+    /* Заголовки */
+    h1, h2, h3, h4, h5 {
+      color: #b0b0f0; /* Светло-фиолетовый для заголовков */
+    }
   </style>
 </head>
 <body>
