@@ -6,15 +6,61 @@
     <title>Список Клиентов</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Темная тема как в Telegram */
+        body { 
+            background-color: #18222D; 
+            color: #ffffff; 
+        }
+
+        /* Таблица */
+        .table {
+            --bs-table-bg: #213040; /* Фон таблицы */
+            --bs-table-color: #ffffff; /* Цвет текста */
+            --bs-table-border-color: #3a3a3a; /* Цвет границ */
+            --bs-table-striped-bg: #253547; /* Фон чётных строк */
+        }
+        .table th {
+            border-top: none; /* Убираем верхнюю границу у заголовков */
+            color: #d0d0d0; /* Светло-серый для заголовков */
+        }
+        .table td, .table th {
+            border-color: #3a3a3a; /* Цвет внутренних границ */
+        }
+
+        /* Кнопки */
+        .btn-outline-light {
+            border-color: #3a3a3a; /* Тёмная граница */
+            color: #d0d0d0; /* Светло-серый текст */
+        }
+        .btn-outline-light:hover {
+            background-color: #3a3a3a; /* Тёмный фон при наведении */
+            color: #ffffff; /* Белый текст */
+        }
+
+        /* Алерты */
+        .alert {
+            border: none;
+            border-radius: 0.375rem;
+        }
+        .alert-danger {
+            background-color: #2d1e28; /* Тёмно-красный */
+            color: #ff6b6b; /* Светло-красный */
+        }
+        .alert-success {
+            background-color: #1e2d21; /* Тёмно-зелёный */
+            color: #4caf8b; /* Светло-зелёный */
+        }
+    </style>
 </head>
-<body class="bg-dark text-light">
+<body>
      <%- include('partials/navbar') %>
     <div class="container mt-4">
         <h1>Список Клиентов</h1>
 
         <% if (typeof clients !== 'undefined' && clients.length > 0) { %>
             <div class="table-responsive">
-                <table class="table table-dark table-striped">
+                <table class="table table-striped">
                     <thead>
                         <tr>
                             <th>Имя</th>
@@ -28,13 +74,13 @@
                     <tbody>
                         <% clients.forEach(client => { %>
                             <tr>
-                                <td><a href="/clients/<%= client.id %>" class="text-decoration-none"><%= client.name %></a></td>
+                                <td><a href="/clients/<%= client.id %>" class="text-decoration-none" style="color: #85c1ff;"> <%= client.name %></a></td> <!-- Голубой цвет для ссылки -->
                                 <td><%= client.phone || 'N/A' %></td>
                                 <td><%= client.address || 'N/A' %></td>
                                 <td><%= client.orderCount || 0 %></td>
                                 <td><%= client.lastOrderDate ? new Date(client.lastOrderDate).toLocaleDateString('ru-RU') : 'N/A' %></td>
                                 <td>
-                                    <a href="/clients/<%= client.id %>" class="btn btn-sm btn-outline-light">Просмотр</a>
+                                    <a href="/clients/<%= client.id %>" class="btn btn-outline-light btn-sm">Просмотр</a>
                                 </td>
                             </tr>
                         <% }); %>
