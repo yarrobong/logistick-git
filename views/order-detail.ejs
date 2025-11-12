@@ -115,45 +115,60 @@ h1, h2, h3, h4, h5 {
   white-space: nowrap;
 }
 
+/* На мобильных устройствах */
+@media (max-width: 768px) {
+  .item-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
 
+  .item-details div {
+    width: 100%; /* Занимает всю ширину */
+    justify-content: flex-start; /* Выравнивание по левому краю */
+    gap: 0.25rem; /* Отступ между текстом и значением */
+  }
+
+  .item-details div::before {
+    content: attr(data-label) ": "; /* Добавляем подпись (например, "Кол-во: ") */
+    white-space: nowrap;
+  }
+
+  .item-actions {
+    opacity: 1; /* Всегда видно */
+    margin-top: 0; /* Убран отступ сверху */
+    align-self: flex-start; /* Выравнивание по верхнему краю */
+    margin-left: 0; /* Убран отступ слева */
+    padding-top: 0.25rem; /* Небольшой отступ сверху */
+  }
+  .item-actions {
+    align-self: center; /* Выравнивание по центру */
+    margin-top: 0.5rem; /* Отступ сверху */
+  }
+}
 
 /* Для ширины экрана меньше 1000px */
 @media (max-width: 1000px) {
-  /* Контейнер карточки делаем вертикальным */
   .item-card .d-flex.justify-content-between {
-    flex-direction: column;
+    flex-direction: column; /* карточка вертикально */
     gap: 0.5rem;
   }
 
-  /* Основной блок с полями товара */
-  .item-card .flex-grow-1 {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  /* Каждый блок Кол-во / Цена / Сумма на отдельной строке */
   .item-card .flex-grow-1 div {
     display: flex;
-    flex-direction: row; /* подпись + input/спан в одной строке */
-    align-items: center;
-    justify-content: flex-start;
-    gap: 0.5rem;
+    flex-direction: column; /* каждый элемент на своей строке */
+    gap: 0.25rem;
     width: 100%;
   }
 
-  /* Inputs и span занимают только нужное место */
   .item-card .flex-grow-1 div input,
   .item-card .flex-grow-1 div .item-total {
-    width: auto;
-    flex: none;
+    width: 100%; /* input и span растягиваем на всю ширину */
   }
 
-  /* Кнопки действий под блоком */
   .item-actions {
     margin-top: 0.5rem;
     width: 100%;
-    display: flex;
     justify-content: flex-start;
   }
 }
@@ -177,6 +192,13 @@ h1, h2, h3, h4, h5 {
 
           <label class="form-label mt-2">Город получателя</label>
           <input type="text" class="form-control" name="destinationCity" required value="<%= order?.destination_city || '' %>">
+
+            <label class="form-label mt-2">Статус</label>
+  <select class="form-select" name="status" required>
+    <% STATUS_CONFIG.ORDER_STATUSES.forEach(status => { %>
+      <option value="<%= status.value %>" <%= (order && order.status === status.value) ? 'selected' : '' %>><%= status.label %></option>
+    <% }); %>
+  </select>
 
           <label class="form-label mt-2">Дата заказа</label>
           <input type="date" class="form-control" name="orderDate"
