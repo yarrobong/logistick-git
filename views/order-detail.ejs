@@ -149,33 +149,27 @@ h1, h2, h3, h4, h5 {
 
 /* Для ширины экрана меньше 1000px */
 @media (max-width: 1000px) {
-  .item-details {
-    display: flex;
-    flex-direction: column; /* каждый элемент на новой строке */
-    align-items: flex-start;
-    gap: 0.25rem; 
-  }
-
-  /* Каждый блок (Кол-во, Цена, Сумма) в отдельный ряд */
-  .item-details div {
-    display: flex;
-    flex-direction: row; /* чтобы подпись и input были в одной строке */
-    justify-content: flex-start;
+  .item-card .d-flex.justify-content-between {
+    flex-direction: column; /* карточка вертикально */
     gap: 0.5rem;
+  }
+
+  .item-card .flex-grow-1 div {
+    display: flex;
+    flex-direction: column; /* каждый элемент на своей строке */
+    gap: 0.25rem;
     width: 100%;
-    flex-wrap: wrap; /* чтобы input и span не съезжали */
   }
 
-  /* Превращаем подпись в отдельный label через ::before */
-  .item-details div::before {
-    content: attr(data-label) ": ";
-    white-space: nowrap;
+  .item-card .flex-grow-1 div input,
+  .item-card .flex-grow-1 div .item-total {
+    width: 100%; /* input и span растягиваем на всю ширину */
   }
 
-  /* Для карточек товаров — выравнивание input и span по ширине */
-  .qty-input, .price-input, .item-total {
-    width: auto; /* минимальная ширина под содержимое */
-    flex: 1; /* растягиваются по возможности */
+  .item-actions {
+    margin-top: 0.5rem;
+    width: 100%;
+    justify-content: flex-start;
   }
 }
 </style>
