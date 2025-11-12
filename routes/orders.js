@@ -247,15 +247,20 @@ router.post('/:orderId/items', async (req, res) => {
   }
 });
 
+// НОВЫЙ маршрут: Обновление отдельных полей товара (inline-редактирование)
 router.post('/:orderId/items/:itemId', async (req, res) => {
   const orderId = parseInt(req.params.orderId, 10);
   const itemId = parseInt(req.params.itemId, 10);
-  const { quantity, price, product_name } = req.body;
+  const { quantity, price, product_name, received_quantity } = req.body; // Добавлено received_quantity
+
+  // Проверка на валидность ID
+  if (isNaN(orderId) || isNaN(itemId)) {
+    return res.status(400).json({ error: 'Invalid order ID or item ID' });
+  }
 
   // Если пришли только отдельные поля (например, при inline-редактировании)
-  if (quantity !== undefined || price !== undefined || product_name !== undefined) {
+  if (quantity !== undefined || price !== undefined || product_name !== undefined || received_quantity !== undefined) {
     try {
-      // Проверим, что пришли только валидные поля
       const updates = {};
       if (quantity !== undefined) {
         const q = parseFloat(quantity);
@@ -277,6 +282,19 @@ router.post('/:orderId/items/:itemId', async (req, res) => {
         }
         updates.product_name = product_name.trim();
       }
+      if (received_quantity !== undefined) {
+        const rec = parseInt(received_quantity);
+        if (isNaN(rec) || rec < 0) {
+          return res.status(400).json({ error: 'Invalid received quantity' });
+        }
+        // Получим текущее количество товара
+        const itemResult = await db.query('SELECT quantity FROM order_items WHERE id = $1', [itemId]);
+        const item = itemResult.rows[0];
+        if (item && rec > item.quantity) {
+          return res.status(400).json({ error: 'Received quantity cannot exceed total quantity' });
+        }
+        updates.received_quantity = rec;
+      }
 
       if (Object.keys(updates).length > 0) {
         await Order.updateItemFields(itemId, updates);
@@ -292,28 +310,12 @@ router.post('/:orderId/items/:itemId', async (req, res) => {
       console.error(err);
       return res.status(500).json({ error: 'Error updating item' });
     }
-  };
-
-// PUT /orders/:orderId/items/:itemId - обновить товар в заказе (используем POST с _method=PUT)
-router.post('/:orderId/items/:itemId', async (req, res) => {
-  const orderId = parseInt(req.params.orderId, 10);
-  const itemId = parseInt(req.params.itemId, 10);
-  const { productName, quantity, price } = req.body;
-
-  if (isNaN(orderId) || isNaN(itemId)) {
-    req.flash('error', 'Неверный ID заказа или товара.');
-    return res.redirect(`/orders/${orderId}`);
   }
 
-  try {
-    await Order.updateItem(itemId, productName, parseInt(quantity, 10), parseFloat(price));
-    req.flash('success', 'Товар успешно обновлен.');
-    res.redirect(`/orders/${orderId}`);
-  } catch (err) {
-    console.error(err);
-    req.flash('error', 'Ошибка при обновлении товара.');
-    res.redirect(`/orders/${orderId}`);
-  }
+  // Если это не inline-обновление, передаём управление дальше (например, старому PUT маршруту)
+  // Но т.к. у нас есть отдельный маршрут для PUT (см. ниже), этот фрагмент не нужен.
+  // Просто вернём 400, если это не inline-обновление
+  return res.status(400).json({ error: 'This endpoint is for inline updates only' });
 });
 
 // DELETE /orders/:orderId/items/:itemId - удалить товар из заказа
