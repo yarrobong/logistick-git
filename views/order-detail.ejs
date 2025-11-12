@@ -115,37 +115,7 @@ h1, h2, h3, h4, h5 {
   white-space: nowrap;
 }
 
-/* На мобильных устройствах */
-@media (max-width: 768px) {
-  .item-details {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-  }
 
-  .item-details div {
-    width: 100%; /* Занимает всю ширину */
-    justify-content: flex-start; /* Выравнивание по левому краю */
-    gap: 0.25rem; /* Отступ между текстом и значением */
-  }
-
-  .item-details div::before {
-    content: attr(data-label) ": "; /* Добавляем подпись (например, "Кол-во: ") */
-    white-space: nowrap;
-  }
-
-  .item-actions {
-    opacity: 1; /* Всегда видно */
-    margin-top: 0; /* Убран отступ сверху */
-    align-self: flex-start; /* Выравнивание по верхнему краю */
-    margin-left: 0; /* Убран отступ слева */
-    padding-top: 0.25rem; /* Небольшой отступ сверху */
-  }
-  .item-actions {
-    align-self: center; /* Выравнивание по центру */
-    margin-top: 0.5rem; /* Отступ сверху */
-  }
-}
 
 /* Для ширины экрана меньше 1000px */
 @media (max-width: 1000px) {
