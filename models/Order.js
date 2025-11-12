@@ -151,15 +151,30 @@ getItemById: async (id) => {
   },
 
   // Вспомогательная функция для пересчета total_amount заказа
-  calculateTotalAmount: async (orderId) => {
-    const result = await db.query(`
-        SELECT COALESCE(SUM(item_total), 0) AS sum_total
-        FROM order_items
-        WHERE order_id = $1
-    `, [orderId]);
-    const totalAmount = result.rows[0].sum_total;
-    await db.query('UPDATE orders SET total_amount = $1 WHERE id = $2', [totalAmount, orderId]);
+  async calculateTotalAmount(orderId) {
+  const totalResult = await pool.query(`
+    SELECT COALESCE(SUM(item_total), 0) AS total
+    FROM order_items
+    WHERE order_id = $1
+  `, [orderId]);
+
+  let total = parseFloat(totalResult.rows[0].total || 0);
+  const limit = 9999999999999.99; // предел для numeric(15,2)
+
+  if (total > limit) {
+    total = limit;
+    console.warn(`⚠️ Total for order ${orderId} exceeded DB limit, capped to ${limit}`);
   }
+
+  const result = await pool.query(`
+    UPDATE orders
+    SET total_amount = $1
+    WHERE id = $2
+    RETURNING *;
+  `, [total, orderId]);
+
+  return result.rows[0];
+}
 };
 
 module.exports = Order;
