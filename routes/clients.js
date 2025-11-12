@@ -2,39 +2,47 @@
 const express = require('express');
 const router = express.Router();
 const Client = require('../models/Client');
-const db = require('../config/database'); // Импортируем db
-const path = require('path'); // <-- добавь это
-const ejs = require('ejs');   // если используешь renderFile
+const Order = require('../models/Order'); // Добавлено для получения заказов
+const STATUS_CONFIG = require('../config/statuses'); // Импортируем статусы
 
-// GET /clients - отобразить список всех клиентов с количеством и последним заказом
+// GET /clients - отобразить список всех клиентов
 router.get('/', async (req, res) => {
   try {
-    // Получаем клиентов и информацию о их заказах для отображения в списке
-    const clients = await Client.findAll();
-    // Для списка можно получить только базовую информацию или количество заказов
-    // Давайте получим количество заказов и дату последнего заказа
-    const clientsWithInfo = await Promise.all(clients.map(async (client) => {
-      const ordersResult = await db.query(`
-          SELECT COUNT(*) as count, MAX(order_date) as last_order_date
-          FROM orders
-          WHERE client_id = $1
-      `, [client.id]);
-      return {
-        ...client,
-        orderCount: parseInt(ordersResult.rows[0].count, 10),
-        lastOrderDate: ordersResult.rows[0].last_order_date
-      };
-    }));
-
-    res.render('clients', { clients: clientsWithInfo });
+    const clients = await Client.findAllWithOrderStats(); // Предполагаем, что у вас есть такой метод
+    res.render('clients', { clients, STATUS_CONFIG, messages: req.flash() });
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке клиентов.');
-    res.redirect('/orders'); // Редиректим на /orders как альтернативу
+    res.redirect('/dashboard');
   }
 });
 
-// GET /clients/:id
+// GET /clients/new - отобразить форму для создания нового клиента
+router.get('/new', (req, res) => {
+  res.render('client-form', { client: null, STATUS_CONFIG, messages: req.flash() });
+});
+
+// POST /clients - создать нового клиента
+router.post('/', async (req, res) => {
+  const { name, phone, address } = req.body;
+
+  if (!name) {
+    req.flash('error', 'Имя клиента обязательно.');
+    return res.redirect('/clients/new');
+  }
+
+  try {
+    const clientId = await Client.create(name, phone, address);
+    req.flash('success', 'Клиент успешно создан.');
+    res.redirect(`/clients/${clientId}`);
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Ошибка при создании клиента.');
+    res.redirect('/clients/new');
+  }
+});
+
+// GET /clients/:id - отобразить детали конкретного клиента
 router.get('/:id', async (req, res) => {
   const clientId = parseInt(req.params.id, 10);
 
@@ -44,32 +52,86 @@ router.get('/:id', async (req, res) => {
   }
 
   try {
-    const client = await Client.findByIdWithOrders(clientId);
+    const client = await Client.findById(clientId);
     if (!client) {
       req.flash('error', 'Клиент не найден.');
       return res.redirect('/clients');
     }
 
-    const filePath = path.join(__dirname, '../views/client-detail.ejs');
+    // Получаем заказы клиента
+    const orders = await Order.findByClientId(clientId);
+    client.orders = orders;
 
-    ejs.renderFile(filePath, {
-      client,
-      STATUS_CONFIG: res.locals.STATUS_CONFIG,
-      messages: res.locals.messages,
-      session: req.session
-    }, { async: true }, (err, str) => {
-      if (err) {
-        console.error(err);
-        req.flash('error', 'Ошибка при рендеринге клиента.');
-        return res.redirect('/clients');
-      }
-      res.send(str);
-    });
-
+    res.render('client-detail', { client, STATUS_CONFIG, messages: req.flash() });
   } catch (err) {
     console.error(err);
     req.flash('error', 'Ошибка при загрузке деталей клиента.');
     res.redirect('/clients');
+  }
+});
+
+// GET /clients/:id/edit - отобразить форму для редактирования клиента
+router.get('/:id/edit', async (req, res) => {
+  const clientId = parseInt(req.params.id, 10);
+
+  if (isNaN(clientId)) {
+    req.flash('error', 'Неверный ID клиента.');
+    return res.redirect('/clients');
+  }
+
+  try {
+    const client = await Client.findById(clientId);
+    if (!client) {
+      req.flash('error', 'Клиент не найден.');
+      return res.redirect('/clients');
+    }
+
+    res.render('client-form', { client, STATUS_CONFIG, messages: req.flash() });
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Ошибка при загрузке клиента для редактирования.');
+    res.redirect('/clients');
+  }
+});
+
+// POST /clients/:id - обновить клиента (используем POST с _method=PUT)
+router.post('/:id', async (req, res) => {
+  const clientId = parseInt(req.params.id, 10);
+  const { name, phone, address } = req.body;
+
+  if (isNaN(clientId) || !name) {
+    req.flash('error', !name ? 'Имя клиента обязательно.' : 'Неверный ID клиента.');
+    return res.redirect(`/clients/${clientId}/edit`);
+  }
+
+  try {
+    await Client.update(clientId, name, phone, address);
+    req.flash('success', 'Клиент успешно обновлён.');
+    res.redirect(`/clients/${clientId}`);
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Ошибка при обновлении клиента.');
+    res.redirect(`/clients/${clientId}/edit`);
+  }
+});
+
+// DELETE /clients/:id - удалить клиента
+router.delete('/:id', async (req, res) => {
+  const clientId = parseInt(req.params.id, 10);
+
+  if (isNaN(clientId)) {
+    req.flash('error', 'Неверный ID клиента.');
+    return res.status(400).send('Bad Request');
+  }
+
+  try {
+    await Client.delete(clientId);
+    req.flash('success', 'Клиент успешно удалён.');
+    res.redirect('/clients');
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Ошибка при удалении клиента.');
+    res.redirect(`/clients/${clientId}`);
   }
 });
 
