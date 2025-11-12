@@ -3,6 +3,8 @@ const express = require('express');
 const router = express.Router();
 const Client = require('../models/Client');
 const db = require('../config/database'); // Импортируем db
+const path = require('path'); // <-- добавь это
+const ejs = require('ejs');   // если используешь renderFile
 
 // GET /clients - отобразить список всех клиентов с количеством и последним заказом
 router.get('/', async (req, res) => {
@@ -32,7 +34,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /clients/:id - отобразить детали клиента и его заказы
+// GET /clients/:id
 router.get('/:id', async (req, res) => {
   const clientId = parseInt(req.params.id, 10);
 
@@ -48,7 +50,6 @@ router.get('/:id', async (req, res) => {
       return res.redirect('/clients');
     }
 
-    // ЗДЕСЬ ВСТАВЛЯЕМ renderFile
     const filePath = path.join(__dirname, '../views/client-detail.ejs');
 
     ejs.renderFile(filePath, {
