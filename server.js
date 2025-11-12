@@ -1,11 +1,12 @@
 // server.js
 const express = require('express');
 const session = require('express-session');
-const pgSession = require('connect-pg-simple')(session); // Импортируем и вызываем
+const pgSession = require('connect-pg-simple')(session);
 const flash = require('connect-flash');
+const methodOverride = require('method-override'); // Импортируем method-override
 const ejs = require('ejs');
 const path = require('path');
-const STATUS_CONFIG = require('./config/statuses'); // Импортируем конфиг статусов
+const STATUS_CONFIG = require('./config/statuses');
 
 // Импорты маршрутов и middleware
 const authRoutes = require('./routes/auth');
@@ -22,13 +23,13 @@ const PORT = process.env.PORT || 3040;
 // Настройка EJS как шаблонизатора
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-app.engine('ejs', ejs.renderFile);
-app.locals._layoutFile = false; // если используете layouts
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(methodOverride('_method'));
 
 // Настройка сессии
 app.use(session({
